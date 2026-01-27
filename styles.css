@@ -48,6 +48,44 @@ body {
     letter-spacing: 0.1em;
 }
 
+/* Tab Switcher */
+.tab-switcher {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--charcoal);
+    cursor: pointer;
+    padding: 0;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.tab-btn:hover {
+    opacity: 0.7;
+}
+
+.tab-btn.active {
+    opacity: 1;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
 .nav {
     display: flex;
     gap: var(--spacing-md);
@@ -271,6 +309,57 @@ body {
     opacity: 1;
     border-color: var(--coral-red);
     color: var(--coral-red);
+}
+
+/* Projects */
+.add-project {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-row-simple {
+    grid-template-columns: 1fr auto;
+}
+
+.form-group-full {
+    grid-column: auto;
+}
+
+.projects-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.project-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: white;
+    border-left: 4px solid var(--teal-blue);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.project-card:hover {
+    box-shadow: 0 2px 8px rgba(26, 26, 26, 0.1);
+}
+
+.project-name {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.project-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.panel-header-project {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: var(--spacing-md);
 }
 
 /* Empty State */
@@ -881,6 +970,14 @@ body {
         align-self: flex-end;
     }
 
+    .tab-switcher {
+        gap: var(--spacing-sm);
+    }
+
+    .tab-btn {
+        font-size: 12px;
+    }
+
     .form-row {
         grid-template-columns: 1fr 1fr;
     }
@@ -930,5 +1027,21 @@ body {
 
     .about-content {
         padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .form-row-simple {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row-simple .btn-add {
+        grid-column: auto;
+    }
+
+    .project-card {
+        padding: var(--spacing-sm);
+    }
+
+    .project-name {
+        font-size: 18px;
     }
 }

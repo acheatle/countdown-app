@@ -9,7 +9,12 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1 class="logo">Countdown</h1>
+            <div class="header-left">
+                <div class="tab-switcher">
+                    <button class="tab-btn active" data-tab="countdowns">Countdowns</button>
+                    <button class="tab-btn" data-tab="projects">Projects</button>
+                </div>
+            </div>
             <div class="header-right">
                 <div class="data-actions">
                     <button class="data-btn" id="btn-export">Export</button>
@@ -19,7 +24,7 @@
                     <button class="data-btn" id="btn-about">About</button>
                     <input type="file" id="import-file" accept=".json" hidden>
                 </div>
-                <nav class="nav">
+                <nav class="nav" id="countdowns-nav">
                     <button class="nav-btn active" data-page="active">Active</button>
                     <button class="nav-btn" data-page="archive">Archive</button>
                     <button class="nav-btn" data-page="canceled">Canceled</button>
@@ -27,7 +32,8 @@
             </div>
         </header>
 
-        <main class="main">
+        <!-- Countdowns View -->
+        <main class="main tab-content active" id="tab-countdowns">
             <!-- Active Page -->
             <section class="page active" id="page-active">
                 <div class="add-countdown">
@@ -88,6 +94,25 @@
                     <p>No canceled countdowns</p>
                 </div>
             </section>
+        </main>
+
+        <!-- Projects View -->
+        <main class="main tab-content" id="tab-projects">
+            <div class="add-project">
+                <form id="project-form" class="form">
+                    <div class="form-row form-row-simple">
+                        <div class="form-group form-group-full">
+                            <label for="project-name">Project Name</label>
+                            <input type="text" id="project-name" placeholder="Project or meeting name" required>
+                        </div>
+                        <button type="submit" class="btn-add">Add</button>
+                    </div>
+                </form>
+            </div>
+            <div class="projects-list" id="projects-list"></div>
+            <div class="empty-state" id="empty-projects">
+                <p>No projects yet</p>
+            </div>
         </main>
     </div>
 
@@ -160,6 +185,40 @@
             <div class="panel-section">
                 <label class="panel-label">Notes</label>
                 <textarea class="panel-notes" id="panel-notes" placeholder="Add notes..."></textarea>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Project Detail Panel -->
+    <div class="panel-overlay" id="project-panel-overlay"></div>
+    <aside class="detail-panel" id="project-detail-panel">
+        <button class="panel-close" id="project-panel-close">&times;</button>
+
+        <div class="panel-content">
+            <!-- Header Section -->
+            <div class="panel-header panel-header-project">
+                <h2 class="panel-title" id="project-panel-title"></h2>
+            </div>
+
+            <!-- Links Section -->
+            <div class="panel-section">
+                <label class="panel-label">Links</label>
+                <div class="panel-links" id="project-panel-links"></div>
+                <div class="add-link-form hidden" id="project-add-link-form">
+                    <input type="text" class="link-input" id="project-link-label" placeholder="Label">
+                    <input type="url" class="link-input" id="project-link-url" placeholder="https://...">
+                    <div class="link-form-actions">
+                        <button type="button" class="btn-link-save" id="project-btn-link-save">Save</button>
+                        <button type="button" class="btn-link-cancel" id="project-btn-link-cancel">Cancel</button>
+                    </div>
+                </div>
+                <button class="btn-add-link" id="project-btn-add-link">+ Add Link</button>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="panel-section">
+                <label class="panel-label">Notes</label>
+                <textarea class="panel-notes" id="project-panel-notes" placeholder="Add notes..."></textarea>
             </div>
         </div>
     </aside>

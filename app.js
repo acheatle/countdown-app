@@ -1,6 +1,29 @@
 // State
 let countdowns = JSON.parse(localStorage.getItem('countdowns')) || [];
+let projects = JSON.parse(localStorage.getItem('projects')) || [];
 let currentModalCountdown = null;
+
+// Tab Elements
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+const countdownsNav = document.getElementById('countdowns-nav');
+
+// Tab Switching
+tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+            if (content.id === `tab-${tab}`) {
+                content.classList.add('active');
+            }
+        });
+        // Show/hide countdowns nav
+        countdownsNav.style.display = tab === 'countdowns' ? 'flex' : 'none';
+    });
+});
 
 // DOM Elements
 const form = document.getElementById('countdown-form');
@@ -822,6 +845,247 @@ renderCountdowns = function() {
 };
 
 // ============================================
+// Projects
+// ============================================
+
+const projectForm = document.getElementById('project-form');
+const projectNameInput = document.getElementById('project-name');
+const projectsList = document.getElementById('projects-list');
+const emptyProjects = document.getElementById('empty-projects');
+
+// Project Detail Panel Elements
+const projectDetailPanel = document.getElementById('project-detail-panel');
+const projectPanelOverlay = document.getElementById('project-panel-overlay');
+const projectPanelClose = document.getElementById('project-panel-close');
+const projectPanelTitle = document.getElementById('project-panel-title');
+const projectPanelLinks = document.getElementById('project-panel-links');
+const projectPanelNotes = document.getElementById('project-panel-notes');
+const projectAddLinkForm = document.getElementById('project-add-link-form');
+const projectBtnAddLink = document.getElementById('project-btn-add-link');
+const projectLinkLabelInput = document.getElementById('project-link-label');
+const projectLinkUrlInput = document.getElementById('project-link-url');
+const projectBtnLinkSave = document.getElementById('project-btn-link-save');
+const projectBtnLinkCancel = document.getElementById('project-btn-link-cancel');
+
+let currentPanelProject = null;
+let projectNotesTimeout = null;
+
+// Save projects to localStorage
+function saveProjects() {
+    localStorage.setItem('projects', JSON.stringify(projects));
+}
+
+// Add project
+projectForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = projectNameInput.value.trim();
+    if (!name) return;
+
+    const project = {
+        id: Date.now(),
+        name,
+        links: [],
+        notes: '',
+        createdAt: new Date().toISOString()
+    };
+
+    projects.push(project);
+    saveProjects();
+    renderProjects();
+    projectForm.reset();
+});
+
+// Create project card
+function createProjectCard(project) {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.dataset.id = project.id;
+
+    card.innerHTML = `
+        <div class="project-name">${escapeHtml(project.name)}</div>
+        <div class="project-actions">
+            <button class="btn-delete" data-id="${project.id}">Delete</button>
+        </div>
+    `;
+
+    return card;
+}
+
+// Render projects
+function renderProjects() {
+    // Sort alphabetically
+    projects.sort((a, b) => a.name.localeCompare(b.name));
+
+    projectsList.innerHTML = '';
+    projects.forEach(project => {
+        projectsList.appendChild(createProjectCard(project));
+    });
+
+    // Show/hide empty state
+    emptyProjects.classList.toggle('hidden', projects.length > 0);
+
+    // Add click handlers
+    setupProjectClickHandlers();
+}
+
+// Setup project click handlers
+function setupProjectClickHandlers() {
+    document.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-delete')) {
+                const id = parseInt(e.target.dataset.id);
+                projects = projects.filter(p => p.id !== id);
+                saveProjects();
+                renderProjects();
+                return;
+            }
+            const id = parseInt(card.dataset.id);
+            openProjectPanel(id);
+        });
+    });
+}
+
+// Open project panel
+function openProjectPanel(projectId) {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    currentPanelProject = project;
+
+    projectPanelTitle.textContent = project.name;
+    renderProjectPanelLinks();
+    projectPanelNotes.value = project.notes || '';
+
+    projectAddLinkForm.classList.add('hidden');
+    projectBtnAddLink.classList.remove('hidden');
+
+    projectDetailPanel.classList.add('active');
+    projectPanelOverlay.classList.add('active');
+}
+
+// Close project panel
+function closeProjectPanel() {
+    projectDetailPanel.classList.remove('active');
+    projectPanelOverlay.classList.remove('active');
+    currentPanelProject = null;
+}
+
+projectPanelClose.addEventListener('click', closeProjectPanel);
+projectPanelOverlay.addEventListener('click', closeProjectPanel);
+
+// Render project panel links
+function renderProjectPanelLinks() {
+    if (!currentPanelProject) return;
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project || !project.links) {
+        projectPanelLinks.innerHTML = '';
+        return;
+    }
+
+    projectPanelLinks.innerHTML = project.links.map((link, index) => `
+        <div class="panel-link">
+            <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>
+            <button class="btn-delete-link" data-index="${index}">&times;</button>
+        </div>
+    `).join('');
+
+    projectPanelLinks.querySelectorAll('.btn-delete-link').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            deleteProjectLink(index);
+        });
+    });
+}
+
+// Add project link
+function addProjectLink(label, url) {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1) return;
+
+    if (!projects[index].links) projects[index].links = [];
+    projects[index].links.push({ label, url });
+    projects[index].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+    renderProjectPanelLinks();
+}
+
+// Delete project link
+function deleteProjectLink(linkIndex) {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1) return;
+
+    projects[index].links.splice(linkIndex, 1);
+    projects[index].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+    renderProjectPanelLinks();
+}
+
+// Project add link button
+projectBtnAddLink.addEventListener('click', () => {
+    projectAddLinkForm.classList.remove('hidden');
+    projectBtnAddLink.classList.add('hidden');
+    projectLinkLabelInput.value = '';
+    projectLinkUrlInput.value = '';
+    projectLinkLabelInput.focus();
+});
+
+// Project cancel link form
+projectBtnLinkCancel.addEventListener('click', () => {
+    projectAddLinkForm.classList.add('hidden');
+    projectBtnAddLink.classList.remove('hidden');
+});
+
+// Project save link
+projectBtnLinkSave.addEventListener('click', () => {
+    const label = projectLinkLabelInput.value.trim();
+    const url = projectLinkUrlInput.value.trim();
+
+    if (!label || !url) return;
+
+    let finalUrl = url;
+    if (!url.match(/^https?:\/\//)) {
+        finalUrl = 'https://' + url;
+    }
+
+    addProjectLink(label, finalUrl);
+
+    projectAddLinkForm.classList.add('hidden');
+    projectBtnAddLink.classList.remove('hidden');
+});
+
+// Project save link on Enter
+projectLinkUrlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        projectBtnLinkSave.click();
+    }
+});
+
+// Project notes auto-save
+projectPanelNotes.addEventListener('input', () => {
+    if (projectNotesTimeout) clearTimeout(projectNotesTimeout);
+    projectNotesTimeout = setTimeout(() => {
+        if (!currentPanelProject) return;
+
+        const index = projects.findIndex(p => p.id === currentPanelProject.id);
+        if (index === -1) return;
+
+        projects[index].notes = projectPanelNotes.value;
+        projects[index].modifiedAt = new Date().toISOString();
+        saveProjects();
+    }, 500);
+});
+
+// Initial projects render
+renderProjects();
+
+// ============================================
 // Export / Import
 // ============================================
 
@@ -833,13 +1097,15 @@ const btnImportReplace = document.getElementById('btn-import-replace');
 const btnImportMerge = document.getElementById('btn-import-merge');
 
 let pendingImportData = null;
+let pendingImportProjects = null;
 
 // Export data
 btnExport.addEventListener('click', () => {
     const data = {
-        version: 1,
+        version: 2,
         exportedAt: new Date().toISOString(),
-        countdowns: countdowns
+        countdowns: countdowns,
+        projects: projects
     };
 
     const json = JSON.stringify(data, null, 2);
@@ -852,7 +1118,7 @@ btnExport.addEventListener('click', () => {
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = `countdowns-backup-${dateStr}.json`;
+    a.download = `backup-${dateStr}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -874,13 +1140,14 @@ importFile.addEventListener('change', (e) => {
         try {
             const data = JSON.parse(event.target.result);
 
-            // Validate data structure
+            // Validate data structure (countdowns required, projects optional for backward compatibility)
             if (!data.countdowns || !Array.isArray(data.countdowns)) {
                 alert('Invalid backup file format.');
                 return;
             }
 
             pendingImportData = data.countdowns;
+            pendingImportProjects = Array.isArray(data.projects) ? data.projects : [];
             importModal.classList.add('active');
         } catch (err) {
             alert('Error reading file. Please ensure it\'s a valid JSON backup.');
@@ -897,53 +1164,82 @@ btnImportReplace.addEventListener('click', () => {
     if (!pendingImportData) return;
 
     countdowns = pendingImportData;
+    projects = pendingImportProjects || [];
     saveCountdowns();
+    saveProjects();
     renderCountdowns();
+    renderProjects();
 
     importModal.classList.remove('active');
     pendingImportData = null;
+    pendingImportProjects = null;
 
-    alert(`Imported ${countdowns.length} countdown(s). All previous data replaced.`);
+    alert(`Imported ${countdowns.length} countdown(s) and ${projects.length} project(s). All previous data replaced.`);
 });
 
 // Import - Merge
 btnImportMerge.addEventListener('click', () => {
     if (!pendingImportData) return;
 
-    let added = 0;
-    let updated = 0;
+    let addedCountdowns = 0;
+    let updatedCountdowns = 0;
+    let addedProjects = 0;
+    let updatedProjects = 0;
 
+    // Merge countdowns
     pendingImportData.forEach(imported => {
         const existingIndex = countdowns.findIndex(c => c.id === imported.id);
 
         if (existingIndex === -1) {
-            // New countdown - add it
             countdowns.push(imported);
-            added++;
+            addedCountdowns++;
         } else {
-            // Existing - compare dates and keep newer
             const existing = countdowns[existingIndex];
             const existingDate = new Date(existing.createdAt || 0);
             const importedDate = new Date(imported.createdAt || 0);
-
-            // Also check if imported has newer modifications (links/notes changes)
             const existingModified = existing.modifiedAt ? new Date(existing.modifiedAt) : existingDate;
             const importedModified = imported.modifiedAt ? new Date(imported.modifiedAt) : importedDate;
 
             if (importedModified > existingModified) {
                 countdowns[existingIndex] = imported;
-                updated++;
+                updatedCountdowns++;
             }
         }
     });
 
+    // Merge projects
+    if (pendingImportProjects) {
+        pendingImportProjects.forEach(imported => {
+            const existingIndex = projects.findIndex(p => p.id === imported.id);
+
+            if (existingIndex === -1) {
+                projects.push(imported);
+                addedProjects++;
+            } else {
+                const existing = projects[existingIndex];
+                const existingDate = new Date(existing.createdAt || 0);
+                const importedDate = new Date(imported.createdAt || 0);
+                const existingModified = existing.modifiedAt ? new Date(existing.modifiedAt) : existingDate;
+                const importedModified = imported.modifiedAt ? new Date(imported.modifiedAt) : importedDate;
+
+                if (importedModified > existingModified) {
+                    projects[existingIndex] = imported;
+                    updatedProjects++;
+                }
+            }
+        });
+    }
+
     saveCountdowns();
+    saveProjects();
     renderCountdowns();
+    renderProjects();
 
     importModal.classList.remove('active');
     pendingImportData = null;
+    pendingImportProjects = null;
 
-    alert(`Import complete. Added: ${added}, Updated: ${updated}`);
+    alert(`Import complete.\nCountdowns - Added: ${addedCountdowns}, Updated: ${updatedCountdowns}\nProjects - Added: ${addedProjects}, Updated: ${updatedProjects}`);
 });
 
 // Close import modal on overlay click
@@ -951,6 +1247,7 @@ importModal.addEventListener('click', (e) => {
     if (e.target === importModal) {
         importModal.classList.remove('active');
         pendingImportData = null;
+        pendingImportProjects = null;
     }
 });
 
