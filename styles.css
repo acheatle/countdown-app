@@ -186,7 +186,7 @@ body {
     font-family: inherit;
     font-size: 16px;
     padding: var(--spacing-sm);
-    border: 1px solid var(--charcoal);
+    border: 1px solid #D0D0D0;
     background: transparent;
     color: var(--charcoal);
 }
@@ -526,7 +526,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--charcoal);
+    border: 1px solid #D0D0D0;
     background: transparent;
     height: 52px;
     gap: 0;
@@ -546,7 +546,7 @@ body {
 
 .wheel-separator-inline {
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--charcoal);
     line-height: 52px;
 }
@@ -565,7 +565,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--charcoal);
     opacity: 0.2;
     cursor: pointer;
@@ -605,11 +605,10 @@ body {
     right: 0;
     height: 26px;
     transform: translateY(-50%);
-    border-top: 1px solid var(--charcoal);
-    border-bottom: 1px solid var(--charcoal);
+    border-top: 1px solid #D0D0D0;
+    border-bottom: 1px solid #D0D0D0;
     pointer-events: none;
     z-index: 1;
-    opacity: 0.3;
 }
 
 /* Detail Panel */
