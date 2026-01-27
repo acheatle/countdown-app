@@ -151,19 +151,29 @@ function formatTimeDisplay(targetDate) {
 }
 
 // Create countdown card HTML
-function createCountdownCard(countdown, isArchived = false, isCanceled = false) {
+function createCountdownCard(countdown, isArchived = false, isCanceled = false, index = 0) {
     const card = document.createElement('div');
     card.className = 'countdown-card';
     card.dataset.id = countdown.id;
+
+    // Alternating colors: even index = teal, odd index = coral
+    const colorClass = index % 2 === 0 ? 'color-teal' : 'color-coral';
+    card.classList.add(colorClass);
 
     if (isCanceled) {
         card.classList.add('canceled');
         const target = new Date(countdown.targetDate);
         const dateStr = target.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         card.innerHTML = `
+            <div class="countdown-color-block">
+                <span class="countdown-number">—</span>
+            </div>
             <div class="countdown-info">
-                <div class="countdown-date">${dateStr}</div>
                 <div class="countdown-name">${countdown.name}</div>
+                <div class="countdown-date">${dateStr}</div>
+            </div>
+            <div class="countdown-actions">
+                <button class="btn-delete" data-id="${countdown.id}">Delete</button>
             </div>
         `;
         return card;
@@ -174,9 +184,15 @@ function createCountdownCard(countdown, isArchived = false, isCanceled = false) 
         const target = new Date(countdown.targetDate);
         const dateStr = target.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         card.innerHTML = `
+            <div class="countdown-color-block">
+                <span class="countdown-number">✓</span>
+            </div>
             <div class="countdown-info">
-                <div class="countdown-date">Completed ${dateStr}</div>
                 <div class="countdown-name">${countdown.name}</div>
+                <div class="countdown-date">Completed ${dateStr}</div>
+            </div>
+            <div class="countdown-actions">
+                <button class="btn-delete" data-id="${countdown.id}">Delete</button>
             </div>
         `;
         return card;
@@ -191,13 +207,13 @@ function createCountdownCard(countdown, isArchived = false, isCanceled = false) 
     }
 
     card.innerHTML = `
+        <div class="countdown-color-block">
+            <span class="countdown-number">${timeDisplay.number}</span>
+            <span class="countdown-unit">${timeDisplay.unit}</span>
+        </div>
         <div class="countdown-info">
-            <div>
-                <span class="countdown-number">${timeDisplay.number}</span>
-                <span class="countdown-unit">${timeDisplay.unit}</span>
-            </div>
-            <div class="countdown-date">${timeDisplay.dateStr}</div>
             <div class="countdown-name">${countdown.name}</div>
+            <div class="countdown-date">${timeDisplay.dateStr}</div>
         </div>
         <div class="countdown-actions">
             <button class="btn-delete" data-id="${countdown.id}">Delete</button>
@@ -218,20 +234,20 @@ function renderCountdowns() {
 
     // Render active
     activeList.innerHTML = '';
-    active.forEach(countdown => {
-        activeList.appendChild(createCountdownCard(countdown));
+    active.forEach((countdown, index) => {
+        activeList.appendChild(createCountdownCard(countdown, false, false, index));
     });
 
     // Render archived
     archiveList.innerHTML = '';
-    archived.forEach(countdown => {
-        archiveList.appendChild(createCountdownCard(countdown, true, false));
+    archived.forEach((countdown, index) => {
+        archiveList.appendChild(createCountdownCard(countdown, true, false, index));
     });
 
     // Render canceled
     canceledList.innerHTML = '';
-    canceled.forEach(countdown => {
-        canceledList.appendChild(createCountdownCard(countdown, false, true));
+    canceled.forEach((countdown, index) => {
+        canceledList.appendChild(createCountdownCard(countdown, false, true, index));
     });
 
     // Show/hide empty states
