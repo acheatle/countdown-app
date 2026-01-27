@@ -15,6 +15,8 @@
                     <button class="data-btn" id="btn-export">Export</button>
                     <span class="data-divider">|</span>
                     <button class="data-btn" id="btn-import">Import</button>
+                    <span class="data-divider">|</span>
+                    <button class="data-btn" id="btn-about">About</button>
                     <input type="file" id="import-file" accept=".json" hidden>
                 </div>
                 <nav class="nav">
@@ -159,6 +161,49 @@
                 <label class="panel-label">Notes</label>
                 <textarea class="panel-notes" id="panel-notes" placeholder="Add notes..."></textarea>
             </div>
+        </div>
+    </aside>
+
+    <!-- About Panel -->
+    <div class="about-overlay" id="about-overlay"></div>
+    <aside class="about-panel" id="about-panel">
+        <button class="panel-close" id="about-close">&times;</button>
+
+        <div class="about-content">
+            <h1 class="about-title">About</h1>
+
+            <section class="about-section">
+                <h2 class="about-heading">How It Works</h2>
+                <p>Create countdowns with a target date and time. The display adapts based on urgency:</p>
+                <ul class="about-list">
+                    <li><strong>&gt;7 days</strong> &mdash; Shows days remaining with date</li>
+                    <li><strong>&le;7 days</strong> &mdash; Adds day name for context</li>
+                    <li><strong>&le;36 hours</strong> &mdash; Switches to hours</li>
+                    <li><strong>&le;60 minutes</strong> &mdash; Shows minutes</li>
+                </ul>
+                <p>Three lists organize your countdowns: <strong>Active</strong> (in progress), <strong>Archive</strong> (completed), and <strong>Canceled</strong>.</p>
+                <p>When a countdown ends, you'll be asked if you met your timeline. Say yes to archive it, or extend/cancel if you need more time.</p>
+            </section>
+
+            <section class="about-section">
+                <h2 class="about-heading">Privacy & Data</h2>
+                <ul class="about-list">
+                    <li>Your countdowns are stored locally in your browser</li>
+                    <li>Nobody else can see your data, not even the app creator</li>
+                    <li>Each device has separate data unless you manually sync</li>
+                </ul>
+            </section>
+
+            <section class="about-section">
+                <h2 class="about-heading">Syncing Across Devices</h2>
+                <ol class="about-list">
+                    <li>Use <strong>Export</strong> to download your data as a JSON file</li>
+                    <li>Save the file somewhere accessible (iCloud, email, etc.)</li>
+                    <li>Use <strong>Import</strong> on other devices to load that data</li>
+                </ol>
+                <p>Your links, notes, and countdowns will transfer exactly.</p>
+            </section>
+
         </div>
     </aside>
 

@@ -954,6 +954,30 @@ importModal.addEventListener('click', (e) => {
     }
 });
 
+// ============================================
+// About Panel
+// ============================================
+
+const btnAbout = document.getElementById('btn-about');
+const aboutPanel = document.getElementById('about-panel');
+const aboutOverlay = document.getElementById('about-overlay');
+const aboutClose = document.getElementById('about-close');
+
+// Open about panel
+btnAbout.addEventListener('click', () => {
+    aboutPanel.classList.add('active');
+    aboutOverlay.classList.add('active');
+});
+
+// Close about panel
+function closeAboutPanel() {
+    aboutPanel.classList.remove('active');
+    aboutOverlay.classList.remove('active');
+}
+
+aboutClose.addEventListener('click', closeAboutPanel);
+aboutOverlay.addEventListener('click', closeAboutPanel);
+
 // Initial render
 renderCountdowns();
 
