@@ -8,6 +8,10 @@ const tabButtons = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 const countdownsNav = document.getElementById('countdowns-nav');
 
+// View Switcher Elements
+const viewButtons = document.querySelectorAll('.view-btn');
+let currentView = 'list';
+
 // Tab Switching
 tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -22,6 +26,32 @@ tabButtons.forEach(btn => {
         });
         // Show/hide countdowns nav
         countdownsNav.style.display = tab === 'countdowns' ? 'flex' : 'none';
+    });
+});
+
+// View Switching
+viewButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const view = btn.dataset.view;
+        if (view === currentView) return;
+
+        currentView = view;
+        viewButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update list classes
+        const lists = document.querySelectorAll('.countdowns-list, .projects-list');
+        lists.forEach(list => {
+            list.classList.toggle('grid-view', view === 'grid');
+        });
+
+        // Align project form with grid
+        const addProject = document.querySelector('.add-project');
+        addProject.classList.toggle('align-grid', view === 'grid');
+
+        // Re-render to update card content
+        renderCountdowns();
+        renderProjects();
     });
 });
 
@@ -175,6 +205,9 @@ function createCountdownCard(countdown, isArchived = false, isCanceled = false, 
             <div class="countdown-actions">
                 <button class="btn-delete" data-id="${countdown.id}">Delete</button>
             </div>
+            <div class="grid-content">
+                <span class="grid-number">—</span>
+            </div>
         `;
         return card;
     }
@@ -193,6 +226,9 @@ function createCountdownCard(countdown, isArchived = false, isCanceled = false, 
             </div>
             <div class="countdown-actions">
                 <button class="btn-delete" data-id="${countdown.id}">Delete</button>
+            </div>
+            <div class="grid-content">
+                <span class="grid-number">✓</span>
             </div>
         `;
         return card;
@@ -217,6 +253,10 @@ function createCountdownCard(countdown, isArchived = false, isCanceled = false, 
         </div>
         <div class="countdown-actions">
             <button class="btn-delete" data-id="${countdown.id}">Delete</button>
+        </div>
+        <div class="grid-content">
+            <span class="grid-number">${timeDisplay.number}</span>
+            <span class="grid-unit">${timeDisplay.unit}</span>
         </div>
     `;
 
@@ -1014,6 +1054,9 @@ function createProjectCard(project, index = 0) {
         </div>
         <div class="project-actions">
             <button class="btn-delete" data-id="${project.id}">Delete</button>
+        </div>
+        <div class="grid-content">
+            <span class="grid-name">${escapeHtml(project.name)}</span>
         </div>
     `;
 
