@@ -998,13 +998,20 @@ projectForm.addEventListener('submit', (e) => {
 });
 
 // Create project card
-function createProjectCard(project) {
+function createProjectCard(project, index = 0) {
     const card = document.createElement('div');
     card.className = 'project-card';
     card.dataset.id = project.id;
 
+    // Alternating colors: even index = teal, odd index = coral
+    const colorClass = index % 2 === 0 ? 'color-teal' : 'color-coral';
+    card.classList.add(colorClass);
+
     card.innerHTML = `
-        <div class="project-name">${escapeHtml(project.name)}</div>
+        <div class="project-color-block"></div>
+        <div class="project-info">
+            <div class="project-name">${escapeHtml(project.name)}</div>
+        </div>
         <div class="project-actions">
             <button class="btn-delete" data-id="${project.id}">Delete</button>
         </div>
@@ -1019,8 +1026,8 @@ function renderProjects() {
     projects.sort((a, b) => a.name.localeCompare(b.name));
 
     projectsList.innerHTML = '';
-    projects.forEach(project => {
-        projectsList.appendChild(createProjectCard(project));
+    projects.forEach((project, index) => {
+        projectsList.appendChild(createProjectCard(project, index));
     });
 
     // Show/hide empty state
