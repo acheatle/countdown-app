@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">Countdown</h1>
+            <nav class="nav">
+                <button class="nav-btn active" data-page="active">Active</button>
+                <button class="nav-btn" data-page="archive">Archive</button>
+                <button class="nav-btn" data-page="canceled">Canceled</button>
+            </nav>
+        </header>
+
+        <main class="main">
+            <!-- Active Page -->
+            <section class="page active" id="page-active">
+                <div class="add-countdown">
+                    <form id="countdown-form" class="form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="countdown-date">Date</label>
+                                <input type="date" id="countdown-date" required>
+                            </div>
+                            <div class="form-group form-group-time">
+                                <label>Time</label>
+                                <div class="time-picker-inline" id="time-picker-inline">
+                                    <div class="wheel-container-inline">
+                                        <div class="wheel-mask-inline"></div>
+                                        <div class="wheel-highlight-inline"></div>
+                                        <div class="wheel" id="wheel-hour" data-type="hour"></div>
+                                    </div>
+                                    <div class="wheel-separator-inline">:</div>
+                                    <div class="wheel-container-inline">
+                                        <div class="wheel-mask-inline"></div>
+                                        <div class="wheel-highlight-inline"></div>
+                                        <div class="wheel" id="wheel-minute" data-type="minute"></div>
+                                    </div>
+                                    <div class="wheel-container-inline wheel-container-period-inline">
+                                        <div class="wheel-mask-inline"></div>
+                                        <div class="wheel-highlight-inline"></div>
+                                        <div class="wheel" id="wheel-period" data-type="period"></div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="countdown-time" value="00:00">
+                            </div>
+                            <div class="form-group form-group-name">
+                                <label for="countdown-name">Event</label>
+                                <input type="text" id="countdown-name" placeholder="Event name" required>
+                            </div>
+                            <button type="submit" class="btn-add">Add</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="countdowns-list" id="active-list"></div>
+                <div class="empty-state" id="empty-active">
+                    <p>No active countdowns</p>
+                </div>
+            </section>
+
+            <!-- Archive Page -->
+            <section class="page" id="page-archive">
+                <div class="countdowns-list" id="archive-list"></div>
+                <div class="empty-state" id="empty-archive">
+                    <p>No archived countdowns</p>
+                </div>
+            </section>
+
+            <!-- Canceled Page -->
+            <section class="page" id="page-canceled">
+                <div class="countdowns-list" id="canceled-list"></div>
+                <div class="empty-state" id="empty-canceled">
+                    <p>No canceled countdowns</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Completion Modal -->
+    <div class="modal" id="completion-modal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modal-event-name"></h2>
+            <p class="modal-question" id="modal-question">Did you meet your timeline?</p>
+            <div class="modal-actions" id="modal-actions-main">
+                <button class="btn btn-yes" id="btn-yes">Yes</button>
+                <button class="btn btn-no" id="btn-no">No</button>
+            </div>
+            <div class="modal-actions hidden" id="modal-actions-extend">
+                <p class="modal-question">Need more time?</p>
+                <button class="btn btn-extend" id="btn-extend">Extend</button>
+                <button class="btn btn-cancel" id="btn-cancel-countdown">Cancel</button>
+            </div>
+            <div class="modal-actions hidden" id="modal-actions-days">
+                <p class="modal-question">How many days?</p>
+                <div class="extend-input">
+                    <input type="number" id="extend-days" min="1" value="1">
+                    <span>days</span>
+                </div>
+                <button class="btn btn-confirm" id="btn-confirm-extend">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="panel-overlay" id="panel-overlay"></div>
+    <aside class="detail-panel" id="detail-panel">
+        <button class="panel-close" id="panel-close">&times;</button>
+
+        <div class="panel-content">
+            <!-- Header Section -->
+            <div class="panel-header">
+                <h2 class="panel-title" id="panel-title"></h2>
+                <div class="panel-countdown" id="panel-countdown"></div>
+            </div>
+
+            <!-- Links Section -->
+            <div class="panel-section">
+                <label class="panel-label">Links</label>
+                <div class="panel-links" id="panel-links"></div>
+                <div class="add-link-form hidden" id="add-link-form">
+                    <input type="text" class="link-input" id="link-label" placeholder="Label">
+                    <input type="url" class="link-input" id="link-url" placeholder="https://...">
+                    <div class="link-form-actions">
+                        <button type="button" class="btn-link-save" id="btn-link-save">Save</button>
+                        <button type="button" class="btn-link-cancel" id="btn-link-cancel">Cancel</button>
+                    </div>
+                </div>
+                <button class="btn-add-link" id="btn-add-link">+ Add Link</button>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="panel-section">
+                <label class="panel-label">Notes</label>
+                <textarea class="panel-notes" id="panel-notes" placeholder="Add notes..."></textarea>
+            </div>
+        </div>
+    </aside>
+
+    <script src="app.js"></script>
+</body>
+</html>
