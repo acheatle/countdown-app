@@ -711,6 +711,7 @@ function addLink(label, url) {
 
     if (!countdowns[index].links) countdowns[index].links = [];
     countdowns[index].links.push({ label, url });
+    countdowns[index].modifiedAt = new Date().toISOString();
 
     saveCountdowns();
     renderPanelLinks();
@@ -724,6 +725,8 @@ function deleteLink(linkIndex) {
     if (index === -1) return;
 
     countdowns[index].links.splice(linkIndex, 1);
+    countdowns[index].modifiedAt = new Date().toISOString();
+
     saveCountdowns();
     renderPanelLinks();
 }
@@ -736,6 +739,7 @@ function saveNotes(notes) {
     if (index === -1) return;
 
     countdowns[index].notes = notes;
+    countdowns[index].modifiedAt = new Date().toISOString();
     saveCountdowns();
 }
 
@@ -816,6 +820,139 @@ renderCountdowns = function() {
         updatePanelCountdown();
     }
 };
+
+// ============================================
+// Export / Import
+// ============================================
+
+const btnExport = document.getElementById('btn-export');
+const btnImport = document.getElementById('btn-import');
+const importFile = document.getElementById('import-file');
+const importModal = document.getElementById('import-modal');
+const btnImportReplace = document.getElementById('btn-import-replace');
+const btnImportMerge = document.getElementById('btn-import-merge');
+
+let pendingImportData = null;
+
+// Export data
+btnExport.addEventListener('click', () => {
+    const data = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        countdowns: countdowns
+    };
+
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    // Format date for filename
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0];
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `countdowns-backup-${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+// Import button - trigger file picker
+btnImport.addEventListener('click', () => {
+    importFile.click();
+});
+
+// File selected
+importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const data = JSON.parse(event.target.result);
+
+            // Validate data structure
+            if (!data.countdowns || !Array.isArray(data.countdowns)) {
+                alert('Invalid backup file format.');
+                return;
+            }
+
+            pendingImportData = data.countdowns;
+            importModal.classList.add('active');
+        } catch (err) {
+            alert('Error reading file. Please ensure it\'s a valid JSON backup.');
+        }
+    };
+    reader.readAsText(file);
+
+    // Reset file input so same file can be selected again
+    importFile.value = '';
+});
+
+// Import - Replace all
+btnImportReplace.addEventListener('click', () => {
+    if (!pendingImportData) return;
+
+    countdowns = pendingImportData;
+    saveCountdowns();
+    renderCountdowns();
+
+    importModal.classList.remove('active');
+    pendingImportData = null;
+
+    alert(`Imported ${countdowns.length} countdown(s). All previous data replaced.`);
+});
+
+// Import - Merge
+btnImportMerge.addEventListener('click', () => {
+    if (!pendingImportData) return;
+
+    let added = 0;
+    let updated = 0;
+
+    pendingImportData.forEach(imported => {
+        const existingIndex = countdowns.findIndex(c => c.id === imported.id);
+
+        if (existingIndex === -1) {
+            // New countdown - add it
+            countdowns.push(imported);
+            added++;
+        } else {
+            // Existing - compare dates and keep newer
+            const existing = countdowns[existingIndex];
+            const existingDate = new Date(existing.createdAt || 0);
+            const importedDate = new Date(imported.createdAt || 0);
+
+            // Also check if imported has newer modifications (links/notes changes)
+            const existingModified = existing.modifiedAt ? new Date(existing.modifiedAt) : existingDate;
+            const importedModified = imported.modifiedAt ? new Date(imported.modifiedAt) : importedDate;
+
+            if (importedModified > existingModified) {
+                countdowns[existingIndex] = imported;
+                updated++;
+            }
+        }
+    });
+
+    saveCountdowns();
+    renderCountdowns();
+
+    importModal.classList.remove('active');
+    pendingImportData = null;
+
+    alert(`Import complete. Added: ${added}, Updated: ${updated}`);
+});
+
+// Close import modal on overlay click
+importModal.addEventListener('click', (e) => {
+    if (e.target === importModal) {
+        importModal.classList.remove('active');
+        pendingImportData = null;
+    }
+});
 
 // Initial render
 renderCountdowns();

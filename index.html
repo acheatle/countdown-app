@@ -10,11 +10,19 @@
     <div class="container">
         <header class="header">
             <h1 class="logo">Countdown</h1>
-            <nav class="nav">
-                <button class="nav-btn active" data-page="active">Active</button>
-                <button class="nav-btn" data-page="archive">Archive</button>
-                <button class="nav-btn" data-page="canceled">Canceled</button>
-            </nav>
+            <div class="header-right">
+                <div class="data-actions">
+                    <button class="data-btn" id="btn-export">Export</button>
+                    <span class="data-divider">|</span>
+                    <button class="data-btn" id="btn-import">Import</button>
+                    <input type="file" id="import-file" accept=".json" hidden>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn active" data-page="active">Active</button>
+                    <button class="nav-btn" data-page="archive">Archive</button>
+                    <button class="nav-btn" data-page="canceled">Canceled</button>
+                </nav>
+            </div>
         </header>
 
         <main class="main">
@@ -103,6 +111,19 @@
                 </div>
                 <button class="btn btn-confirm" id="btn-confirm-extend">Confirm</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal" id="import-modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Import Data</h2>
+            <p class="modal-question">How would you like to import?</p>
+            <div class="modal-actions">
+                <button class="btn btn-no" id="btn-import-replace">Replace All</button>
+                <button class="btn btn-yes" id="btn-import-merge">Merge</button>
+            </div>
+            <p class="import-hint">Replace: Overwrites all current data<br>Merge: Combines data, keeps newer versions</p>
         </div>
     </div>
 
