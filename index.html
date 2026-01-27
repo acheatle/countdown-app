@@ -162,8 +162,31 @@
         <div class="panel-content">
             <!-- Header Section -->
             <div class="panel-header">
-                <h2 class="panel-title" id="panel-title"></h2>
+                <div class="panel-header-top">
+                    <h2 class="panel-title" id="panel-title"></h2>
+                    <button class="btn-edit" id="btn-edit-countdown">Edit</button>
+                </div>
                 <div class="panel-countdown" id="panel-countdown"></div>
+
+                <!-- Edit Form (hidden by default) -->
+                <div class="panel-edit-form hidden" id="panel-edit-form">
+                    <div class="edit-field">
+                        <label for="edit-name">Event Name</label>
+                        <input type="text" id="edit-name" class="edit-input">
+                    </div>
+                    <div class="edit-field">
+                        <label for="edit-date">Date</label>
+                        <input type="date" id="edit-date" class="edit-input">
+                    </div>
+                    <div class="edit-field">
+                        <label for="edit-time">Time</label>
+                        <input type="time" id="edit-time" class="edit-input">
+                    </div>
+                    <div class="edit-actions">
+                        <button type="button" class="btn-edit-save" id="btn-edit-save">Save</button>
+                        <button type="button" class="btn-edit-cancel" id="btn-edit-cancel">Cancel</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Links Section -->

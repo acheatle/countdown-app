@@ -674,6 +674,14 @@ body {
     padding-right: var(--spacing-lg);
 }
 
+.panel-title.hidden {
+    display: none;
+}
+
+.panel-countdown.hidden {
+    display: none;
+}
+
 .panel-countdown {
     display: flex;
     align-items: baseline;
@@ -691,6 +699,116 @@ body {
 .panel-countdown .countdown-date {
     margin-left: var(--spacing-sm);
     margin-top: 0;
+}
+
+/* Panel Header with Edit */
+.panel-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+}
+
+.panel-header-top .panel-title {
+    margin-bottom: var(--spacing-sm);
+    padding-right: 0;
+}
+
+.btn-edit {
+    font-family: inherit;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: none;
+    border: 1px solid var(--charcoal);
+    color: var(--charcoal);
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-edit:hover {
+    opacity: 1;
+}
+
+.btn-edit.hidden {
+    display: none;
+}
+
+/* Edit Form */
+.panel-edit-form {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid rgba(26, 26, 26, 0.1);
+}
+
+.panel-edit-form.hidden {
+    display: none;
+}
+
+.edit-field {
+    margin-bottom: var(--spacing-sm);
+}
+
+.edit-field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+    margin-bottom: var(--spacing-xs);
+}
+
+.edit-input {
+    font-family: inherit;
+    font-size: 16px;
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--charcoal);
+    background: transparent;
+    color: var(--charcoal);
+}
+
+.edit-input:focus {
+    outline: none;
+    border-color: var(--teal-blue);
+}
+
+.edit-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-md);
+}
+
+.btn-edit-save,
+.btn-edit-cancel {
+    font-family: inherit;
+    font-size: 12px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: none;
+    cursor: pointer;
+}
+
+.btn-edit-save {
+    background: var(--charcoal);
+    color: var(--cream);
+}
+
+.btn-edit-save:hover {
+    background: var(--teal-blue);
+}
+
+.btn-edit-cancel {
+    background: none;
+    border: 1px solid var(--charcoal);
+    color: var(--charcoal);
+    opacity: 0.6;
+}
+
+.btn-edit-cancel:hover {
+    opacity: 1;
 }
 
 .panel-section {

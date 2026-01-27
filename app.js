@@ -627,8 +627,18 @@ const linkUrlInput = document.getElementById('link-url');
 const btnLinkSave = document.getElementById('btn-link-save');
 const btnLinkCancel = document.getElementById('btn-link-cancel');
 
+// Edit elements
+const btnEditCountdown = document.getElementById('btn-edit-countdown');
+const panelEditForm = document.getElementById('panel-edit-form');
+const editNameInput = document.getElementById('edit-name');
+const editDateInput = document.getElementById('edit-date');
+const editTimeInput = document.getElementById('edit-time');
+const btnEditSave = document.getElementById('btn-edit-save');
+const btnEditCancel = document.getElementById('btn-edit-cancel');
+
 let currentPanelCountdown = null;
 let notesTimeout = null;
+let isEditMode = false;
 
 // Open panel
 function openPanel(countdownId) {
@@ -651,6 +661,9 @@ function openPanel(countdownId) {
     addLinkForm.classList.add('hidden');
     btnAddLink.classList.remove('hidden');
 
+    // Reset edit mode
+    closeEditMode();
+
     // Show panel
     detailPanel.classList.add('active');
     panelOverlay.classList.add('active');
@@ -661,7 +674,80 @@ function closePanel() {
     detailPanel.classList.remove('active');
     panelOverlay.classList.remove('active');
     currentPanelCountdown = null;
+    closeEditMode();
 }
+
+// Edit Mode Functions
+function openEditMode() {
+    if (!currentPanelCountdown) return;
+
+    const countdown = countdowns.find(c => c.id === currentPanelCountdown.id);
+    if (!countdown) return;
+
+    // Parse current date/time
+    const targetDate = new Date(countdown.targetDate);
+    const dateStr = targetDate.toISOString().split('T')[0];
+    const hours = targetDate.getHours().toString().padStart(2, '0');
+    const minutes = targetDate.getMinutes().toString().padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+
+    // Populate edit fields
+    editNameInput.value = countdown.name;
+    editDateInput.value = dateStr;
+    editTimeInput.value = timeStr;
+
+    // Show edit form, hide display
+    panelEditForm.classList.remove('hidden');
+    panelTitle.classList.add('hidden');
+    panelCountdown.classList.add('hidden');
+    btnEditCountdown.classList.add('hidden');
+
+    isEditMode = true;
+}
+
+function closeEditMode() {
+    panelEditForm.classList.add('hidden');
+    panelTitle.classList.remove('hidden');
+    panelCountdown.classList.remove('hidden');
+    btnEditCountdown.classList.remove('hidden');
+    isEditMode = false;
+}
+
+function saveEdit() {
+    if (!currentPanelCountdown) return;
+
+    const index = countdowns.findIndex(c => c.id === currentPanelCountdown.id);
+    if (index === -1) return;
+
+    const newName = editNameInput.value.trim();
+    const newDate = editDateInput.value;
+    const newTime = editTimeInput.value || '00:00';
+
+    if (!newName || !newDate) return;
+
+    // Update countdown
+    countdowns[index].name = newName;
+    countdowns[index].targetDate = `${newDate}T${newTime}`;
+    countdowns[index].modifiedAt = new Date().toISOString();
+
+    saveCountdowns();
+    renderCountdowns();
+
+    // Update panel display
+    panelTitle.textContent = newName;
+    updatePanelCountdown();
+
+    closeEditMode();
+}
+
+// Edit button click
+btnEditCountdown.addEventListener('click', openEditMode);
+
+// Edit save
+btnEditSave.addEventListener('click', saveEdit);
+
+// Edit cancel
+btnEditCancel.addEventListener('click', closeEditMode);
 
 // Update panel countdown display
 function updatePanelCountdown() {
