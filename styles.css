@@ -523,6 +523,29 @@ body {
     color: var(--coral-red);
 }
 
+/* Share button */
+.panel-share-action {
+    margin-top: var(--spacing-sm);
+}
+
+.btn-share {
+    font-family: inherit;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: none;
+    border: 1px solid var(--charcoal);
+    color: var(--charcoal);
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.btn-share:hover {
+    opacity: 1;
+}
+
 /* Empty State */
 .empty-state {
     padding: var(--spacing-xl) 0;

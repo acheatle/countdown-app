@@ -1072,6 +1072,7 @@ const projectBtnLinkCancel = document.getElementById('project-btn-link-cancel');
 const projectStatusActions = document.getElementById('project-status-actions');
 const btnCompleteProject = document.getElementById('btn-complete-project');
 const btnCancelProject = document.getElementById('btn-cancel-project');
+const btnShareProject = document.getElementById('btn-share-project');
 
 let currentPanelProject = null;
 let projectNotesTimeout = null;
@@ -1362,6 +1363,45 @@ btnCancelProject.addEventListener('click', () => {
     }
 });
 
+// Share project (export single project)
+btnShareProject.addEventListener('click', () => {
+    if (!currentPanelProject) return;
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project) return;
+
+    // Create single-project export
+    const data = {
+        type: 'single-project',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        project: {
+            name: project.name,
+            links: project.links || [],
+            notes: project.notes || ''
+        }
+    };
+
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    // Sanitize filename (remove special chars, replace spaces with hyphens)
+    const sanitizedName = project.name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 50);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `project-${sanitizedName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
 // Initial projects render
 renderProjects();
 
@@ -1420,6 +1460,12 @@ importFile.addEventListener('change', (e) => {
         try {
             const data = JSON.parse(event.target.result);
 
+            // Check if this is a single-project export
+            if (data.type === 'single-project' && data.project) {
+                importSingleProject(data.project);
+                return;
+            }
+
             // Validate data structure (countdowns required, projects optional for backward compatibility)
             if (!data.countdowns || !Array.isArray(data.countdowns)) {
                 alert('Invalid backup file format.');
@@ -1438,6 +1484,25 @@ importFile.addEventListener('change', (e) => {
     // Reset file input so same file can be selected again
     importFile.value = '';
 });
+
+// Import single project (from Share)
+function importSingleProject(projectData) {
+    const newProject = {
+        id: Date.now(),
+        name: projectData.name,
+        status: 'active',
+        links: projectData.links || [],
+        notes: projectData.notes || '',
+        createdAt: new Date().toISOString(),
+        importedAt: new Date().toISOString()
+    };
+
+    projects.push(newProject);
+    saveProjects();
+    renderProjects();
+
+    alert(`Project "${projectData.name}" imported successfully!`);
+}
 
 // Import - Replace all
 btnImportReplace.addEventListener('click', () => {
