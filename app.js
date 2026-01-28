@@ -1877,3 +1877,253 @@ if (pomodoroState.muted) {
     pomodoroMute.classList.add('muted');
     soundIcon.innerHTML = '<path fill="currentColor" d="M16.5 12A4.5 4.5 0 0014 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
 }
+
+// ============================================
+// Fidget Widget (Colorforms)
+// ============================================
+
+const fidgetToggle = document.getElementById('fidget-toggle');
+const fidgetWidget = document.getElementById('fidget-widget');
+const fidgetMinimize = document.getElementById('fidget-minimize');
+const fidgetClear = document.getElementById('fidget-clear');
+const fidgetPalette = document.getElementById('fidget-palette');
+const fidgetCanvas = document.getElementById('fidget-canvas');
+
+let selectedShape = null;
+let shapeZIndex = 1;
+let isDraggingNew = false;
+let draggedElement = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+let shapeRotations = new Map(); // Track rotation per shape
+
+// Open/close fidget widget
+fidgetToggle.addEventListener('click', () => {
+    fidgetWidget.classList.remove('hidden');
+    fidgetToggle.classList.add('hidden');
+});
+
+fidgetMinimize.addEventListener('click', () => {
+    fidgetWidget.classList.add('hidden');
+    fidgetToggle.classList.remove('hidden');
+    // Deselect any selected shape
+    if (selectedShape) {
+        selectedShape.classList.remove('selected');
+        selectedShape = null;
+    }
+});
+
+// Clear all shapes
+fidgetClear.addEventListener('click', () => {
+    fidgetCanvas.innerHTML = '';
+    selectedShape = null;
+    shapeZIndex = 1;
+});
+
+// Create shape from palette
+function createShape(shapeType, size, color, x, y, rotation = 0) {
+    const shape = document.createElement('div');
+    shape.className = 'fidget-shape';
+    shape.dataset.shape = shapeType;
+    shape.dataset.size = size;
+    shape.dataset.color = color;
+    shape.style.left = x + 'px';
+    shape.style.top = y + 'px';
+    shape.style.zIndex = shapeZIndex++;
+    shape.style.transform = `rotate(${rotation}deg)`;
+    shapeRotations.set(shape, rotation);
+
+    // Make shape draggable
+    shape.addEventListener('mousedown', startDragShape);
+    shape.addEventListener('touchstart', startDragShape, { passive: false });
+
+    // Select on click
+    shape.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectShape(shape);
+    });
+
+    // Double-click to rotate 45 degrees
+    shape.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        rotateShape(shape, 45);
+    });
+
+    return shape;
+}
+
+// Rotate a shape
+function rotateShape(shape, degrees) {
+    const currentRotation = shapeRotations.get(shape) || 0;
+    const newRotation = (currentRotation + degrees) % 360;
+    shapeRotations.set(shape, newRotation);
+    shape.style.transform = `rotate(${newRotation}deg)`;
+}
+
+// Select a shape
+function selectShape(shape) {
+    if (selectedShape) {
+        selectedShape.classList.remove('selected');
+    }
+    selectedShape = shape;
+    shape.classList.add('selected');
+    // Bring to front
+    shape.style.zIndex = shapeZIndex++;
+}
+
+// Deselect when clicking canvas
+fidgetCanvas.addEventListener('click', (e) => {
+    if (e.target === fidgetCanvas && selectedShape) {
+        selectedShape.classList.remove('selected');
+        selectedShape = null;
+    }
+});
+
+// Drag from palette
+fidgetPalette.querySelectorAll('.fidget-shape-btn').forEach(btn => {
+    btn.addEventListener('mousedown', startDragFromPalette);
+    btn.addEventListener('touchstart', startDragFromPalette, { passive: false });
+});
+
+function startDragFromPalette(e) {
+    e.preventDefault();
+    const btn = e.currentTarget;
+
+    const shapeType = btn.dataset.shape;
+    const size = btn.dataset.size;
+    const color = btn.dataset.color;
+
+    // Create a preview shape that follows the cursor
+    const preview = document.createElement('div');
+    preview.className = 'fidget-shape fidget-drag-preview';
+    preview.dataset.shape = shapeType;
+    preview.dataset.size = size;
+    preview.dataset.color = color;
+    document.body.appendChild(preview);
+
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+    // Get dimensions after adding to DOM
+    const previewRect = preview.getBoundingClientRect();
+    dragOffsetX = previewRect.width / 2;
+    dragOffsetY = previewRect.height / 2;
+
+    preview.style.left = (clientX - dragOffsetX) + 'px';
+    preview.style.top = (clientY - dragOffsetY) + 'px';
+
+    isDraggingNew = true;
+    draggedElement = preview;
+
+    function moveDrag(e) {
+        if (!isDraggingNew) return;
+        e.preventDefault();
+        const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        preview.style.left = (cx - dragOffsetX) + 'px';
+        preview.style.top = (cy - dragOffsetY) + 'px';
+    }
+
+    function endDrag(e) {
+        if (!isDraggingNew) return;
+        isDraggingNew = false;
+
+        const cx = e.type === 'touchend' ? e.changedTouches[0].clientX : e.clientX;
+        const cy = e.type === 'touchend' ? e.changedTouches[0].clientY : e.clientY;
+
+        // Check if dropped on canvas
+        const canvasRect = fidgetCanvas.getBoundingClientRect();
+        if (cx >= canvasRect.left && cx <= canvasRect.right &&
+            cy >= canvasRect.top && cy <= canvasRect.bottom) {
+            // Add shape to canvas
+            const newShape = createShape(shapeType, size, color,
+                cx - canvasRect.left - dragOffsetX,
+                cy - canvasRect.top - dragOffsetY);
+            fidgetCanvas.appendChild(newShape);
+            selectShape(newShape);
+        }
+
+        if (preview.parentNode) {
+            preview.parentNode.removeChild(preview);
+        }
+        document.removeEventListener('mousemove', moveDrag);
+        document.removeEventListener('mouseup', endDrag);
+        document.removeEventListener('touchmove', moveDrag);
+        document.removeEventListener('touchend', endDrag);
+    }
+
+    document.addEventListener('mousemove', moveDrag);
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchmove', moveDrag, { passive: false });
+    document.addEventListener('touchend', endDrag);
+}
+
+// Drag existing shape on canvas
+function startDragShape(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const shape = e.currentTarget;
+    selectShape(shape);
+
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+    const rect = shape.getBoundingClientRect();
+    const canvasRect = fidgetCanvas.getBoundingClientRect();
+
+    dragOffsetX = clientX - rect.left;
+    dragOffsetY = clientY - rect.top;
+
+    function moveShape(e) {
+        const cx = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const cy = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        let newX = cx - canvasRect.left - dragOffsetX;
+        let newY = cy - canvasRect.top - dragOffsetY;
+
+        // Keep within canvas bounds
+        newX = Math.max(0, Math.min(canvasRect.width - rect.width, newX));
+        newY = Math.max(0, Math.min(canvasRect.height - rect.height, newY));
+
+        shape.style.left = newX + 'px';
+        shape.style.top = newY + 'px';
+    }
+
+    function endMove() {
+        document.removeEventListener('mousemove', moveShape);
+        document.removeEventListener('mouseup', endMove);
+        document.removeEventListener('touchmove', moveShape);
+        document.removeEventListener('touchend', endMove);
+    }
+
+    document.addEventListener('mousemove', moveShape);
+    document.addEventListener('mouseup', endMove);
+    document.addEventListener('touchmove', moveShape, { passive: false });
+    document.addEventListener('touchend', endMove);
+}
+
+// Keyboard controls for selected shape
+document.addEventListener('keydown', (e) => {
+    // Don't handle if focus is in an input
+    if (document.activeElement.tagName === 'INPUT' ||
+        document.activeElement.tagName === 'TEXTAREA') {
+        return;
+    }
+
+    if (!selectedShape) return;
+
+    // Delete selected shape with Delete/Backspace key
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        shapeRotations.delete(selectedShape);
+        selectedShape.remove();
+        selectedShape = null;
+    }
+
+    // Rotate with R key (45 degrees clockwise)
+    if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        rotateShape(selectedShape, e.shiftKey ? -45 : 45);
+    }
+});
