@@ -1843,7 +1843,7 @@ pomodoroMute.addEventListener('click', (e) => {
 });
 
 // Minimize/Expand functionality
-let pomodoroHidden = localStorage.getItem('pomodoroHidden') === 'true';
+let pomodoroHidden = localStorage.getItem('pomodoroHidden') !== 'false';
 
 function hidePomodoroClock() {
     pomodoroClock.classList.add('hidden');
