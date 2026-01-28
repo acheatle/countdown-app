@@ -449,6 +449,24 @@ body {
     line-height: 1.3;
 }
 
+.project-status-label {
+    font-size: 11px;
+    opacity: 0.5;
+    margin-top: 2px;
+}
+
+.project-card.archived {
+    opacity: 0.6;
+}
+
+.project-card.canceled {
+    opacity: 0.4;
+}
+
+.project-card.canceled .project-name {
+    text-decoration: line-through;
+}
+
 .project-actions {
     display: flex;
     align-items: center;
@@ -456,9 +474,53 @@ body {
 }
 
 .panel-header-project {
-    border-bottom: none;
-    padding-bottom: 0;
-    margin-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--charcoal);
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Panel Status Actions */
+.panel-status-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+}
+
+.panel-status-actions.hidden {
+    display: none;
+}
+
+.btn-status {
+    font-family: inherit;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    cursor: pointer;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+.btn-complete {
+    background: var(--teal-blue);
+    border: none;
+    color: white;
+}
+
+.btn-complete:hover {
+    background: #3d8282;
+}
+
+.btn-cancel-project {
+    background: none;
+    border: 1px solid var(--charcoal);
+    color: var(--charcoal);
+    opacity: 0.5;
+}
+
+.btn-cancel-project:hover {
+    opacity: 1;
+    border-color: var(--coral-red);
+    color: var(--coral-red);
 }
 
 /* Empty State */

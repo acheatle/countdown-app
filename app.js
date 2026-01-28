@@ -23,6 +23,11 @@ const countdownsNav = document.getElementById('countdowns-nav');
 const viewButtons = document.querySelectorAll('.view-btn');
 let currentView = 'list';
 
+// Projects Nav
+const projectsNav = document.getElementById('projects-nav');
+const projectNavButtons = document.querySelectorAll('#projects-nav .nav-btn');
+const projectPages = document.querySelectorAll('#tab-projects .page');
+
 // Tab Switching
 tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -35,8 +40,24 @@ tabButtons.forEach(btn => {
                 content.classList.add('active');
             }
         });
-        // Show/hide countdowns nav
+        // Show/hide nav based on tab
         countdownsNav.style.display = tab === 'countdowns' ? 'flex' : 'none';
+        projectsNav.style.display = tab === 'projects' ? 'flex' : 'none';
+    });
+});
+
+// Project Navigation
+projectNavButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const page = btn.dataset.page;
+        projectNavButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        projectPages.forEach(p => {
+            p.classList.remove('active');
+            if (p.id === `page-${page}`) {
+                p.classList.add('active');
+            }
+        });
     });
 });
 
@@ -50,7 +71,7 @@ viewButtons.forEach(btn => {
         viewButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        // Update list classes
+        // Update list classes (all countdown and project lists)
         const lists = document.querySelectorAll('.countdowns-list, .projects-list');
         lists.forEach(list => {
             list.classList.toggle('grid-view', view === 'grid');
@@ -58,7 +79,9 @@ viewButtons.forEach(btn => {
 
         // Align project form with grid
         const addProject = document.querySelector('.add-project');
-        addProject.classList.toggle('align-grid', view === 'grid');
+        if (addProject) {
+            addProject.classList.toggle('align-grid', view === 'grid');
+        }
 
         // Re-render to update card content
         renderCountdowns();
@@ -1027,7 +1050,11 @@ renderCountdowns = function() {
 const projectForm = document.getElementById('project-form');
 const projectNameInput = document.getElementById('project-name');
 const projectsList = document.getElementById('projects-list');
+const projectsArchiveList = document.getElementById('projects-archive-list');
+const projectsCanceledList = document.getElementById('projects-canceled-list');
 const emptyProjects = document.getElementById('empty-projects');
+const emptyProjectsArchive = document.getElementById('empty-projects-archive');
+const emptyProjectsCanceled = document.getElementById('empty-projects-canceled');
 
 // Project Detail Panel Elements
 const projectDetailPanel = document.getElementById('project-detail-panel');
@@ -1042,6 +1069,9 @@ const projectLinkLabelInput = document.getElementById('project-link-label');
 const projectLinkUrlInput = document.getElementById('project-link-url');
 const projectBtnLinkSave = document.getElementById('project-btn-link-save');
 const projectBtnLinkCancel = document.getElementById('project-btn-link-cancel');
+const projectStatusActions = document.getElementById('project-status-actions');
+const btnCompleteProject = document.getElementById('btn-complete-project');
+const btnCancelProject = document.getElementById('btn-cancel-project');
 
 let currentPanelProject = null;
 let projectNotesTimeout = null;
@@ -1060,6 +1090,7 @@ projectForm.addEventListener('submit', (e) => {
     const project = {
         id: Date.now(),
         name,
+        status: 'active',
         links: [],
         notes: '',
         createdAt: new Date().toISOString()
@@ -1072,7 +1103,7 @@ projectForm.addEventListener('submit', (e) => {
 });
 
 // Create project card
-function createProjectCard(project, index = 0) {
+function createProjectCard(project, index = 0, isArchived = false, isCanceled = false) {
     const card = document.createElement('div');
     card.className = 'project-card';
     card.dataset.id = project.id;
@@ -1081,10 +1112,20 @@ function createProjectCard(project, index = 0) {
     const colorClass = getColorClass(index);
     card.classList.add(colorClass);
 
+    if (isArchived) {
+        card.classList.add('archived');
+    }
+
+    if (isCanceled) {
+        card.classList.add('canceled');
+    }
+
     card.innerHTML = `
         <div class="project-color-block"></div>
         <div class="project-info">
             <div class="project-name">${escapeHtml(project.name)}</div>
+            ${isArchived ? '<div class="project-status-label">Completed</div>' : ''}
+            ${isCanceled ? '<div class="project-status-label">Canceled</div>' : ''}
         </div>
         <div class="project-actions">
             <button class="btn-delete" data-id="${project.id}">Delete</button>
@@ -1099,16 +1140,37 @@ function createProjectCard(project, index = 0) {
 
 // Render projects
 function renderProjects() {
-    // Sort alphabetically
-    projects.sort((a, b) => a.name.localeCompare(b.name));
+    const active = projects.filter(p => !p.status || p.status === 'active');
+    const archived = projects.filter(p => p.status === 'archived');
+    const canceled = projects.filter(p => p.status === 'canceled');
 
+    // Sort alphabetically
+    active.sort((a, b) => a.name.localeCompare(b.name));
+    archived.sort((a, b) => a.name.localeCompare(b.name));
+    canceled.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Render active
     projectsList.innerHTML = '';
-    projects.forEach((project, index) => {
+    active.forEach((project, index) => {
         projectsList.appendChild(createProjectCard(project, index));
     });
 
-    // Show/hide empty state
-    emptyProjects.classList.toggle('hidden', projects.length > 0);
+    // Render archived
+    projectsArchiveList.innerHTML = '';
+    archived.forEach((project, index) => {
+        projectsArchiveList.appendChild(createProjectCard(project, index, true, false));
+    });
+
+    // Render canceled
+    projectsCanceledList.innerHTML = '';
+    canceled.forEach((project, index) => {
+        projectsCanceledList.appendChild(createProjectCard(project, index, false, true));
+    });
+
+    // Show/hide empty states
+    emptyProjects.classList.toggle('hidden', active.length > 0);
+    emptyProjectsArchive.classList.toggle('hidden', archived.length > 0);
+    emptyProjectsCanceled.classList.toggle('hidden', canceled.length > 0);
 
     // Add click handlers
     setupProjectClickHandlers();
@@ -1116,7 +1178,7 @@ function renderProjects() {
 
 // Setup project click handlers
 function setupProjectClickHandlers() {
-    document.querySelectorAll('.project-card').forEach(card => {
+    document.querySelectorAll('#tab-projects .project-card').forEach(card => {
         card.addEventListener('click', (e) => {
             if (e.target.classList.contains('btn-delete')) {
                 const id = parseInt(e.target.dataset.id);
@@ -1144,6 +1206,10 @@ function openProjectPanel(projectId) {
 
     projectAddLinkForm.classList.add('hidden');
     projectBtnAddLink.classList.remove('hidden');
+
+    // Show/hide status actions based on project status
+    const isActive = !project.status || project.status === 'active';
+    projectStatusActions.classList.toggle('hidden', !isActive);
 
     projectDetailPanel.classList.add('active');
     projectPanelOverlay.classList.add('active');
@@ -1266,6 +1332,34 @@ projectPanelNotes.addEventListener('input', () => {
         projects[index].modifiedAt = new Date().toISOString();
         saveProjects();
     }, 500);
+});
+
+// Complete project
+btnCompleteProject.addEventListener('click', () => {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index !== -1) {
+        projects[index].status = 'archived';
+        projects[index].completedAt = new Date().toISOString();
+        saveProjects();
+        renderProjects();
+        closeProjectPanel();
+    }
+});
+
+// Cancel project
+btnCancelProject.addEventListener('click', () => {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index !== -1) {
+        projects[index].status = 'canceled';
+        projects[index].canceledAt = new Date().toISOString();
+        saveProjects();
+        renderProjects();
+        closeProjectPanel();
+    }
 });
 
 // Initial projects render

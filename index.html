@@ -33,6 +33,11 @@
                     <button class="nav-btn" data-page="archive">Archive</button>
                     <button class="nav-btn" data-page="canceled">Canceled</button>
                 </nav>
+                <nav class="nav" id="projects-nav" style="display: none;">
+                    <button class="nav-btn active" data-page="projects-active">Active</button>
+                    <button class="nav-btn" data-page="projects-archive">Archive</button>
+                    <button class="nav-btn" data-page="projects-canceled">Canceled</button>
+                </nav>
             </div>
         </header>
 
@@ -102,21 +107,40 @@
 
         <!-- Projects View -->
         <main class="main tab-content" id="tab-projects">
-            <div class="add-project">
-                <form id="project-form" class="form">
-                    <div class="form-row form-row-simple">
-                        <div class="form-group form-group-full">
-                            <label for="project-name">Project Name</label>
-                            <input type="text" id="project-name" placeholder="Project or meeting name" required>
+            <!-- Active Projects Page -->
+            <section class="page active" id="page-projects-active">
+                <div class="add-project">
+                    <form id="project-form" class="form">
+                        <div class="form-row form-row-simple">
+                            <div class="form-group form-group-full">
+                                <label for="project-name">Project Name</label>
+                                <input type="text" id="project-name" placeholder="Project or meeting name" required>
+                            </div>
+                            <button type="submit" class="btn-add">Add</button>
                         </div>
-                        <button type="submit" class="btn-add">Add</button>
-                    </div>
-                </form>
-            </div>
-            <div class="projects-list" id="projects-list"></div>
-            <div class="empty-state" id="empty-projects">
-                <p>No projects yet</p>
-            </div>
+                    </form>
+                </div>
+                <div class="projects-list" id="projects-list"></div>
+                <div class="empty-state" id="empty-projects">
+                    <p>No active projects</p>
+                </div>
+            </section>
+
+            <!-- Archive Projects Page -->
+            <section class="page" id="page-projects-archive">
+                <div class="projects-list" id="projects-archive-list"></div>
+                <div class="empty-state" id="empty-projects-archive">
+                    <p>No archived projects</p>
+                </div>
+            </section>
+
+            <!-- Canceled Projects Page -->
+            <section class="page" id="page-projects-canceled">
+                <div class="projects-list" id="projects-canceled-list"></div>
+                <div class="empty-state" id="empty-projects-canceled">
+                    <p>No canceled projects</p>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -236,7 +260,13 @@
         <div class="panel-content">
             <!-- Header Section -->
             <div class="panel-header panel-header-project">
-                <h2 class="panel-title" id="project-panel-title"></h2>
+                <div class="panel-header-top">
+                    <h2 class="panel-title" id="project-panel-title"></h2>
+                </div>
+                <div class="panel-status-actions" id="project-status-actions">
+                    <button class="btn-status btn-complete" id="btn-complete-project">Complete</button>
+                    <button class="btn-status btn-cancel-project" id="btn-cancel-project">Cancel</button>
+                </div>
             </div>
 
             <!-- Links Section -->
