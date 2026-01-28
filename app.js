@@ -1479,6 +1479,8 @@ const pomodoroStatus = document.getElementById('pomodoro-status');
 const pomodoroReset = document.getElementById('pomodoro-reset');
 const pomodoroMute = document.getElementById('pomodoro-mute');
 const soundIcon = document.getElementById('sound-icon');
+const pomodoroMinimize = document.getElementById('pomodoro-minimize');
+const pomodoroExpand = document.getElementById('pomodoro-expand');
 
 const WORK_DURATION = 25 * 60; // 25 minutes in seconds
 const BREAK_DURATION = 5 * 60; // 5 minutes in seconds
@@ -1681,8 +1683,37 @@ pomodoroMute.addEventListener('click', (e) => {
     toggleMute();
 });
 
+// Minimize/Expand functionality
+let pomodoroHidden = localStorage.getItem('pomodoroHidden') === 'true';
+
+function hidePomodoroClock() {
+    pomodoroClock.classList.add('hidden');
+    pomodoroExpand.classList.add('visible');
+    pomodoroHidden = true;
+    localStorage.setItem('pomodoroHidden', 'true');
+}
+
+function showPomodoroClock() {
+    pomodoroClock.classList.remove('hidden');
+    pomodoroExpand.classList.remove('visible');
+    pomodoroHidden = false;
+    localStorage.setItem('pomodoroHidden', 'false');
+}
+
+pomodoroMinimize.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hidePomodoroClock();
+});
+
+pomodoroExpand.addEventListener('click', showPomodoroClock);
+
 // Initialize display
-updateClockDisplay();
+if (pomodoroHidden) {
+    pomodoroClock.classList.add('hidden');
+    pomodoroExpand.classList.add('visible');
+}
+
+pomodoroStatus.textContent = '25:00';
 if (pomodoroState.muted) {
     pomodoroMute.classList.add('muted');
     soundIcon.innerHTML = '<path fill="currentColor" d="M16.5 12A4.5 4.5 0 0014 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';

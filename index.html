@@ -313,6 +313,7 @@
 
     <!-- Pomodoro Clock -->
     <div class="pomodoro-clock" id="pomodoro-clock">
+        <button class="pomodoro-minimize" id="pomodoro-minimize" title="Hide clock">−</button>
         <svg class="clock-face" viewBox="0 0 100 100">
             <!-- Clock face -->
             <circle cx="50" cy="50" r="48" fill="white" stroke="#1A1A1A" stroke-width="2"/>
@@ -362,6 +363,9 @@
             </button>
         </div>
     </div>
+
+    <!-- Pomodoro Expand Button (shown when clock is hidden) -->
+    <button class="pomodoro-expand" id="pomodoro-expand" title="Show clock">+</button>
 
     <script src="app.js"></script>
 </body>
