@@ -2,6 +2,7 @@
 :root {
     --coral-red: #D85846;
     --teal-blue: #4A9B9B;
+    --mustard-yellow: #D4A574;
     --charcoal: #1A1A1A;
     --cream: #F5F0E8;
     --spacing-xs: 8px;
@@ -284,6 +285,10 @@ body {
     background: var(--coral-red);
 }
 
+.countdown-card.color-mustard .countdown-color-block {
+    background: var(--mustard-yellow);
+}
+
 .countdown-card.archived {
     opacity: 0.6;
 }
@@ -421,6 +426,10 @@ body {
 
 .project-card.color-coral .project-color-block {
     background: var(--coral-red);
+}
+
+.project-card.color-mustard .project-color-block {
+    background: var(--mustard-yellow);
 }
 
 .project-color-block {
@@ -588,6 +597,19 @@ body {
 .extend-input span {
     font-size: 16px;
     opacity: 0.6;
+}
+
+/* Unlock Modal */
+.modal-content-small {
+    max-width: 320px;
+    padding: var(--spacing-lg);
+}
+
+.unlock-color-swatch {
+    width: 60px;
+    height: 60px;
+    background: var(--mustard-yellow);
+    margin: var(--spacing-md) auto;
 }
 
 /* Inline Time Picker */
@@ -1190,6 +1212,11 @@ body {
 .grid-view .countdown-card.color-coral,
 .grid-view .project-card.color-coral {
     background: var(--coral-red);
+}
+
+.grid-view .countdown-card.color-mustard,
+.grid-view .project-card.color-mustard {
+    background: var(--mustard-yellow);
 }
 
 .grid-view .countdown-color-block,

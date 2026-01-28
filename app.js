@@ -2,6 +2,17 @@
 let countdowns = JSON.parse(localStorage.getItem('countdowns')) || [];
 let projects = JSON.parse(localStorage.getItem('projects')) || [];
 let currentModalCountdown = null;
+let mustardUnlocked = localStorage.getItem('mustardUnlocked') === 'true';
+
+// Get color class based on index
+function getColorClass(index) {
+    if (mustardUnlocked) {
+        const colors = ['color-teal', 'color-coral', 'color-mustard'];
+        return colors[index % 3];
+    } else {
+        return index % 2 === 0 ? 'color-teal' : 'color-coral';
+    }
+}
 
 // Tab Elements
 const tabButtons = document.querySelectorAll('.tab-btn');
@@ -186,8 +197,8 @@ function createCountdownCard(countdown, isArchived = false, isCanceled = false, 
     card.className = 'countdown-card';
     card.dataset.id = countdown.id;
 
-    // Alternating colors: even index = teal, odd index = coral
-    const colorClass = index % 2 === 0 ? 'color-teal' : 'color-coral';
+    // Alternating colors based on unlock state
+    const colorClass = getColorClass(index);
     card.classList.add(colorClass);
 
     if (isCanceled) {
@@ -336,6 +347,22 @@ function hideModal() {
     currentModalCountdown = null;
 }
 
+// Unlock modal
+const unlockModal = document.getElementById('unlock-modal');
+
+function showUnlockModal() {
+    unlockModal.classList.add('active');
+}
+
+function hideUnlockModal() {
+    unlockModal.classList.remove('active');
+    // Re-render to show new colors
+    renderCountdowns();
+    renderProjects();
+}
+
+document.getElementById('btn-unlock-ok').addEventListener('click', hideUnlockModal);
+
 // Modal: Yes button
 document.getElementById('btn-yes').addEventListener('click', () => {
     if (currentModalCountdown) {
@@ -344,6 +371,13 @@ document.getElementById('btn-yes').addEventListener('click', () => {
             countdowns[index].status = 'archived';
             saveCountdowns();
             renderCountdowns();
+
+            // Check if this is the first successful completion
+            if (!mustardUnlocked) {
+                mustardUnlocked = true;
+                localStorage.setItem('mustardUnlocked', 'true');
+                showUnlockModal();
+            }
         }
     }
     hideModal();
@@ -1043,8 +1077,8 @@ function createProjectCard(project, index = 0) {
     card.className = 'project-card';
     card.dataset.id = project.id;
 
-    // Alternating colors: even index = teal, odd index = coral
-    const colorClass = index % 2 === 0 ? 'color-teal' : 'color-coral';
+    // Alternating colors based on unlock state
+    const colorClass = getColorClass(index);
     card.classList.add(colorClass);
 
     card.innerHTML = `
