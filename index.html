@@ -311,6 +311,58 @@
         </div>
     </aside>
 
+    <!-- Pomodoro Clock -->
+    <div class="pomodoro-clock" id="pomodoro-clock">
+        <svg class="clock-face" viewBox="0 0 100 100">
+            <!-- Clock face -->
+            <circle cx="50" cy="50" r="48" fill="white" stroke="#1A1A1A" stroke-width="2"/>
+
+            <!-- Tick marks at 12, 3, 6, 9 -->
+            <line x1="50" y1="6" x2="50" y2="12" stroke="#1A1A1A" stroke-width="2"/>
+            <line x1="94" y1="50" x2="88" y2="50" stroke="#1A1A1A" stroke-width="2"/>
+            <line x1="50" y1="94" x2="50" y2="88" stroke="#1A1A1A" stroke-width="2"/>
+            <line x1="6" y1="50" x2="12" y2="50" stroke="#1A1A1A" stroke-width="2"/>
+
+            <!-- Minor tick marks -->
+            <line x1="50" y1="6" x2="50" y2="10" stroke="#1A1A1A" stroke-width="1" transform="rotate(30 50 50)"/>
+            <line x1="50" y1="6" x2="50" y2="10" stroke="#1A1A1A" stroke-width="1" transform="rotate(60 50 50)"/>
+            <line x1="50" y1="6" x2="50" y2="10" stroke="#1A1A1A" stroke-width="1" transform="rotate(120 50 50)"/>
+            <line x1="50" y1="6" x2="50" y2="10" stroke="#1A1A1A" stroke-width="1" transform="rotate(150 50 50)"/>
+            <line x1="50" y1="6" x2="50" y2="10" stroke="#1A1A1A" stroke-width="1" transform="rotate(210 50 50)"/>
+            <line x1="50" y1="6" x2="50" y2="10" stroke="#1A1A1A" stroke-width="1" transform="rotate(240 50 50)"/>
+            <line x1="50" y1="6" x2="50" y2="10" stroke="#1A1A1A" stroke-width="1" transform="rotate(300 50 50)"/>
+            <line x1="50" y1="6" x2="50" y2="10" stroke="#1A1A1A" stroke-width="1" transform="rotate(330 50 50)"/>
+
+            <!-- Minute hand (black, thin) -->
+            <line id="minute-hand" x1="50" y1="50" x2="50" y2="18" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round"/>
+
+            <!-- Second hand (red lollipop style) -->
+            <g id="second-hand" transform="rotate(0 50 50)">
+                <line x1="50" y1="50" x2="50" y2="16" stroke="#D85846" stroke-width="1.5"/>
+                <circle cx="50" cy="12" r="3.5" fill="#D85846"/>
+                <line x1="50" y1="50" x2="50" y2="58" stroke="#D85846" stroke-width="1.5"/>
+            </g>
+
+            <!-- Center dot -->
+            <circle cx="50" cy="50" r="3" fill="#1A1A1A"/>
+        </svg>
+
+        <div class="pomodoro-status" id="pomodoro-status">25:00</div>
+
+        <div class="pomodoro-controls">
+            <button class="pomodoro-btn" id="pomodoro-reset" title="Reset">
+                <svg viewBox="0 0 24 24" width="14" height="14">
+                    <path fill="currentColor" d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+            </button>
+            <button class="pomodoro-btn" id="pomodoro-mute" title="Mute">
+                <svg viewBox="0 0 24 24" width="14" height="14" id="sound-icon">
+                    <path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

@@ -1466,3 +1466,224 @@ renderCountdowns();
 
 // Update interval
 setInterval(update, 1000);
+
+// ============================================
+// Pomodoro Timer
+// ============================================
+
+const pomodoroClock = document.getElementById('pomodoro-clock');
+const clockFace = document.querySelector('.clock-face');
+const minuteHand = document.getElementById('minute-hand');
+const secondHand = document.getElementById('second-hand');
+const pomodoroStatus = document.getElementById('pomodoro-status');
+const pomodoroReset = document.getElementById('pomodoro-reset');
+const pomodoroMute = document.getElementById('pomodoro-mute');
+const soundIcon = document.getElementById('sound-icon');
+
+const WORK_DURATION = 25 * 60; // 25 minutes in seconds
+const BREAK_DURATION = 5 * 60; // 5 minutes in seconds
+
+let pomodoroState = {
+    running: false,
+    paused: false,
+    startTime: null,
+    pausedAt: null,
+    elapsedBeforePause: 0,
+    totalTime: WORK_DURATION,
+    isBreak: false,
+    muted: localStorage.getItem('pomodoroMuted') === 'true'
+};
+
+let animationFrameId = null;
+
+// Audio context for chime
+let audioContext = null;
+
+function playChime() {
+    if (pomodoroState.muted) return;
+
+    try {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        // Create a pleasant chime sound
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 1);
+
+        // Second tone
+        setTimeout(() => {
+            const osc2 = audioContext.createOscillator();
+            const gain2 = audioContext.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioContext.destination);
+            osc2.frequency.setValueAtTime(1760, audioContext.currentTime); // A6
+            osc2.type = 'sine';
+            gain2.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+            osc2.start(audioContext.currentTime);
+            osc2.stop(audioContext.currentTime + 0.8);
+        }, 200);
+    } catch (e) {
+        console.log('Audio not supported');
+    }
+}
+
+function getElapsedSeconds() {
+    if (!pomodoroState.startTime) return 0;
+    const now = pomodoroState.paused ? pomodoroState.pausedAt : Date.now();
+    return pomodoroState.elapsedBeforePause + (now - pomodoroState.startTime) / 1000;
+}
+
+function getTimeRemaining() {
+    const elapsed = getElapsedSeconds();
+    return Math.max(0, pomodoroState.totalTime - elapsed);
+}
+
+function updateClockDisplay() {
+    const elapsed = getElapsedSeconds();
+    const timeRemaining = getTimeRemaining();
+    const progress = elapsed / pomodoroState.totalTime;
+
+    // Minute hand shows overall progress (full rotation over the session)
+    const minuteAngle = progress * 360;
+    minuteHand.setAttribute('transform', `rotate(${minuteAngle} 50 50)`);
+
+    // Second hand moves continuously (full rotation per minute)
+    const secondAngle = (elapsed % 60) * 6;
+    secondHand.setAttribute('transform', `rotate(${secondAngle} 50 50)`);
+
+    // Update time display (shows whole seconds)
+    const minutes = Math.floor(timeRemaining / 60);
+    const secs = Math.floor(timeRemaining % 60);
+    pomodoroStatus.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+function animatePomodoro() {
+    if (!pomodoroState.running || pomodoroState.paused) return;
+
+    updateClockDisplay();
+
+    const timeRemaining = getTimeRemaining();
+
+    if (timeRemaining <= 0) {
+        // Timer complete
+        cancelAnimationFrame(animationFrameId);
+        playChime();
+
+        if (!pomodoroState.isBreak) {
+            // Work session complete, start break
+            pomodoroState.isBreak = true;
+            pomodoroState.totalTime = BREAK_DURATION;
+            pomodoroState.startTime = Date.now();
+            pomodoroState.elapsedBeforePause = 0;
+            pomodoroClock.classList.add('break-mode');
+
+            // Auto-start break after a short delay
+            setTimeout(() => {
+                if (pomodoroState.isBreak && pomodoroState.running) {
+                    animationFrameId = requestAnimationFrame(animatePomodoro);
+                }
+            }, 1000);
+        } else {
+            // Break complete, reset to work mode
+            resetPomodoro();
+            playChime();
+        }
+        return;
+    }
+
+    animationFrameId = requestAnimationFrame(animatePomodoro);
+}
+
+function startPomodoro() {
+    if (pomodoroState.running && !pomodoroState.paused) {
+        // Pause
+        pomodoroState.paused = true;
+        pomodoroState.pausedAt = Date.now();
+        pomodoroClock.classList.add('paused');
+        pomodoroClock.classList.remove('running');
+        cancelAnimationFrame(animationFrameId);
+        return;
+    }
+
+    if (pomodoroState.paused) {
+        // Resume
+        pomodoroState.elapsedBeforePause = getElapsedSeconds();
+        pomodoroState.startTime = Date.now();
+        pomodoroState.paused = false;
+        pomodoroState.pausedAt = null;
+        pomodoroClock.classList.remove('paused');
+        pomodoroClock.classList.add('running');
+    } else {
+        // Start fresh
+        pomodoroState.running = true;
+        pomodoroState.paused = false;
+        pomodoroState.startTime = Date.now();
+        pomodoroState.elapsedBeforePause = 0;
+        pomodoroClock.classList.add('running');
+    }
+
+    animationFrameId = requestAnimationFrame(animatePomodoro);
+}
+
+function resetPomodoro() {
+    cancelAnimationFrame(animationFrameId);
+    pomodoroState.running = false;
+    pomodoroState.paused = false;
+    pomodoroState.isBreak = false;
+    pomodoroState.startTime = null;
+    pomodoroState.pausedAt = null;
+    pomodoroState.elapsedBeforePause = 0;
+    pomodoroState.totalTime = WORK_DURATION;
+
+    pomodoroClock.classList.remove('running', 'paused', 'break-mode');
+
+    // Reset hands
+    minuteHand.setAttribute('transform', 'rotate(0 50 50)');
+    secondHand.setAttribute('transform', 'rotate(0 50 50)');
+    pomodoroStatus.textContent = '25:00';
+}
+
+function toggleMute() {
+    pomodoroState.muted = !pomodoroState.muted;
+    localStorage.setItem('pomodoroMuted', pomodoroState.muted);
+    pomodoroMute.classList.toggle('muted', pomodoroState.muted);
+
+    // Update icon
+    if (pomodoroState.muted) {
+        soundIcon.innerHTML = '<path fill="currentColor" d="M16.5 12A4.5 4.5 0 0014 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+    } else {
+        soundIcon.innerHTML = '<path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+    }
+}
+
+// Event listeners
+clockFace.addEventListener('click', startPomodoro);
+pomodoroReset.addEventListener('click', (e) => {
+    e.stopPropagation();
+    resetPomodoro();
+});
+pomodoroMute.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMute();
+});
+
+// Initialize display
+updateClockDisplay();
+if (pomodoroState.muted) {
+    pomodoroMute.classList.add('muted');
+    soundIcon.innerHTML = '<path fill="currentColor" d="M16.5 12A4.5 4.5 0 0014 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+}
