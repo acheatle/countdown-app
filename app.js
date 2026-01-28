@@ -2103,6 +2103,199 @@ function startDragShape(e) {
     document.addEventListener('touchend', endMove);
 }
 
+// ============================================
+// Pong Widget (Meditative)
+// ============================================
+
+const pongToggle = document.getElementById('pong-toggle');
+const pongWidget = document.getElementById('pong-widget');
+const pongMinimize = document.getElementById('pong-minimize');
+const pongCanvas = document.getElementById('pong-canvas');
+const pongCtx = pongCanvas.getContext('2d');
+
+let pongRunning = false;
+let pongAnimationId = null;
+
+// Game colors
+const PONG_PADDLE_COLOR = '#4A9B9B'; // Teal
+const PONG_BALL_COLOR = '#D85846'; // Coral
+const PONG_BORDER_COLOR = '#1A1A1A'; // Charcoal
+
+// Game objects
+const pongPaddle = {
+    x: 125,
+    y: 280,
+    width: 50,
+    height: 8,
+    speed: 6
+};
+
+const pongBall = {
+    x: 150,
+    y: 150,
+    radius: 8,
+    speedX: 2,
+    speedY: 3,
+    baseSpeed: 3
+};
+
+// Input state
+let pongKeys = { up: false, down: false };
+let pongMouseX = null;
+
+// Open/close pong widget
+pongToggle.addEventListener('click', () => {
+    pongWidget.classList.remove('hidden');
+    pongToggle.classList.add('hidden');
+    startPong();
+});
+
+pongMinimize.addEventListener('click', () => {
+    pongWidget.classList.add('hidden');
+    pongToggle.classList.remove('hidden');
+    stopPong();
+});
+
+function startPong() {
+    if (pongRunning) return;
+    pongRunning = true;
+    resetBall();
+    pongLoop();
+}
+
+function stopPong() {
+    pongRunning = false;
+    if (pongAnimationId) {
+        cancelAnimationFrame(pongAnimationId);
+        pongAnimationId = null;
+    }
+}
+
+function resetBall() {
+    pongBall.x = pongCanvas.width / 2;
+    pongBall.y = pongCanvas.height / 3;
+
+    // Random direction (mostly downward)
+    const angle = (Math.random() - 0.5) * Math.PI / 3; // -30 to 30 degrees from vertical
+    pongBall.speedX = Math.sin(angle) * pongBall.baseSpeed;
+    pongBall.speedY = Math.cos(angle) * pongBall.baseSpeed;
+}
+
+function updatePong() {
+    // Paddle movement via keyboard (left/right now)
+    if (pongKeys.up && pongPaddle.x > 0) {
+        pongPaddle.x -= pongPaddle.speed;
+    }
+    if (pongKeys.down && pongPaddle.x < pongCanvas.width - pongPaddle.width) {
+        pongPaddle.x += pongPaddle.speed;
+    }
+
+    // Paddle movement via mouse (horizontal)
+    if (pongMouseX !== null) {
+        const targetX = pongMouseX - pongPaddle.width / 2;
+        pongPaddle.x = Math.max(0, Math.min(pongCanvas.width - pongPaddle.width, targetX));
+    }
+
+    // Ball movement
+    pongBall.x += pongBall.speedX;
+    pongBall.y += pongBall.speedY;
+
+    // Ball collision with left/right walls
+    if (pongBall.x - pongBall.radius <= 0 || pongBall.x + pongBall.radius >= pongCanvas.width) {
+        pongBall.speedX = -pongBall.speedX;
+        pongBall.x = Math.max(pongBall.radius, Math.min(pongCanvas.width - pongBall.radius, pongBall.x));
+    }
+
+    // Ball collision with top wall (bounces back down)
+    if (pongBall.y - pongBall.radius <= 0) {
+        pongBall.speedY = Math.abs(pongBall.speedY);
+    }
+
+    // Ball collision with paddle (bottom)
+    if (pongBall.y + pongBall.radius >= pongPaddle.y &&
+        pongBall.y - pongBall.radius <= pongPaddle.y + pongPaddle.height &&
+        pongBall.x >= pongPaddle.x &&
+        pongBall.x <= pongPaddle.x + pongPaddle.width) {
+
+        pongBall.speedY = -Math.abs(pongBall.speedY);
+
+        // Add slight angle based on where ball hits paddle
+        const hitPos = (pongBall.x - pongPaddle.x) / pongPaddle.width;
+        pongBall.speedX = (hitPos - 0.5) * pongBall.baseSpeed * 2;
+    }
+
+    // Ball goes off bottom - gently reset
+    if (pongBall.y - pongBall.radius > pongCanvas.height) {
+        resetBall();
+    }
+}
+
+function drawPong() {
+    // Clear canvas
+    pongCtx.clearRect(0, 0, pongCanvas.width, pongCanvas.height);
+
+    // Draw subtle center line (horizontal)
+    pongCtx.setLineDash([5, 10]);
+    pongCtx.strokeStyle = 'rgba(26, 26, 26, 0.1)';
+    pongCtx.lineWidth = 1;
+    pongCtx.beginPath();
+    pongCtx.moveTo(0, pongCanvas.height / 2);
+    pongCtx.lineTo(pongCanvas.width, pongCanvas.height / 2);
+    pongCtx.stroke();
+    pongCtx.setLineDash([]);
+
+    // Draw paddle (horizontal at bottom)
+    pongCtx.fillStyle = PONG_PADDLE_COLOR;
+    pongCtx.fillRect(pongPaddle.x, pongPaddle.y, pongPaddle.width, pongPaddle.height);
+
+    // Draw ball
+    pongCtx.fillStyle = PONG_BALL_COLOR;
+    pongCtx.beginPath();
+    pongCtx.arc(pongBall.x, pongBall.y, pongBall.radius, 0, Math.PI * 2);
+    pongCtx.fill();
+}
+
+function pongLoop() {
+    if (!pongRunning) return;
+
+    updatePong();
+    drawPong();
+
+    pongAnimationId = requestAnimationFrame(pongLoop);
+}
+
+// Keyboard controls for Pong
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') pongKeys.up = true;
+    if (e.key === 'ArrowRight') pongKeys.down = true;
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft') pongKeys.up = false;
+    if (e.key === 'ArrowRight') pongKeys.down = false;
+});
+
+// Mouse control
+pongCanvas.addEventListener('mousemove', (e) => {
+    const rect = pongCanvas.getBoundingClientRect();
+    pongMouseX = e.clientX - rect.left;
+});
+
+pongCanvas.addEventListener('mouseleave', () => {
+    pongMouseX = null;
+});
+
+// Touch control
+pongCanvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const rect = pongCanvas.getBoundingClientRect();
+    pongMouseX = e.touches[0].clientX - rect.left;
+}, { passive: false });
+
+pongCanvas.addEventListener('touchend', () => {
+    pongMouseX = null;
+});
+
 // Keyboard controls for selected shape
 document.addEventListener('keydown', (e) => {
     // Don't handle if focus is in an input
