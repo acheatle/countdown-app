@@ -3,6 +3,7 @@
     --coral-red: #D85846;
     --teal-blue: #4A9B9B;
     --mustard-yellow: #D4A574;
+    --mustard: #D4A574;
     --charcoal: #1A1A1A;
     --cream: #F5F0E8;
     --spacing-xs: 8px;
@@ -306,6 +307,10 @@ body::before {
     background: var(--mustard-yellow);
 }
 
+.countdown-card.color-charcoal .countdown-color-block {
+    background: var(--charcoal);
+}
+
 .countdown-card.archived {
     opacity: 0.6;
 }
@@ -393,8 +398,9 @@ body::before {
 }
 
 .add-project .form-row-simple {
-    grid-template-columns: 70px 1fr 80px;
+    grid-template-columns: 70px 1fr auto 80px;
     padding-right: var(--spacing-sm);
+    gap: var(--spacing-sm);
 }
 
 .add-project .form-row-simple::before {
@@ -403,7 +409,7 @@ body::before {
 
 /* Align project form with grid view */
 .add-project.align-grid .form-row-simple {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
     max-width: 632px; /* 3 columns (200px each) + 2 gaps (16px each) */
 }
 
@@ -417,6 +423,58 @@ body::before {
 
 .form-group-full {
     grid-column: auto;
+}
+
+/* Color Picker */
+.color-picker {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.color-swatch {
+    width: 24px;
+    height: 24px;
+    border: 2px solid transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    padding: 0;
+}
+
+.color-swatch:hover {
+    transform: scale(1.1);
+}
+
+.color-swatch.selected {
+    border-color: var(--charcoal);
+}
+
+.color-swatch.selected::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Panel color picker */
+.panel-color-picker {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.panel-label-inline {
+    margin-bottom: 0;
+}
+
+.panel-color-picker.hidden {
+    display: none;
 }
 
 .projects-list {
@@ -447,6 +505,10 @@ body::before {
 
 .project-card.color-mustard .project-color-block {
     background: var(--mustard-yellow);
+}
+
+.project-card.color-charcoal .project-color-block {
+    background: var(--charcoal);
 }
 
 .project-color-block {
@@ -1544,6 +1606,16 @@ body::before {
 .grid-view .countdown-card.color-mustard,
 .grid-view .project-card.color-mustard {
     background: var(--mustard-yellow);
+}
+
+.grid-view .countdown-card.color-charcoal,
+.grid-view .project-card.color-charcoal {
+    background: var(--charcoal);
+}
+
+.grid-view .countdown-card.color-charcoal .grid-content,
+.grid-view .project-card.color-charcoal .grid-content {
+    color: var(--cream);
 }
 
 .grid-view .countdown-color-block,

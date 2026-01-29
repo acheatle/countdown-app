@@ -118,6 +118,12 @@
                                 <label for="project-name">Project Name</label>
                                 <input type="text" id="project-name" placeholder="Project or meeting name" required>
                             </div>
+                            <div class="color-picker" id="project-color-picker">
+                                <button type="button" class="color-swatch selected" data-color="teal" style="background-color: var(--teal-blue)"></button>
+                                <button type="button" class="color-swatch" data-color="coral" style="background-color: var(--coral-red)"></button>
+                                <button type="button" class="color-swatch" data-color="mustard" style="background-color: var(--mustard)"></button>
+                                <button type="button" class="color-swatch" data-color="charcoal" style="background-color: var(--charcoal)"></button>
+                            </div>
                             <button type="submit" class="btn-add">Add</button>
                         </div>
                     </form>
@@ -285,6 +291,15 @@
             <div class="panel-header panel-header-project">
                 <div class="panel-header-top">
                     <h2 class="panel-title" id="project-panel-title"></h2>
+                </div>
+                <div class="panel-color-picker" id="project-panel-color-picker">
+                    <label class="panel-label panel-label-inline">Color</label>
+                    <div class="color-picker">
+                        <button type="button" class="color-swatch" data-color="teal" style="background-color: var(--teal-blue)"></button>
+                        <button type="button" class="color-swatch" data-color="coral" style="background-color: var(--coral-red)"></button>
+                        <button type="button" class="color-swatch" data-color="mustard" style="background-color: var(--mustard)"></button>
+                        <button type="button" class="color-swatch" data-color="charcoal" style="background-color: var(--charcoal)"></button>
+                    </div>
                 </div>
                 <div class="panel-status-actions" id="project-status-actions">
                     <button class="btn-status btn-complete" id="btn-complete-project">Complete</button>

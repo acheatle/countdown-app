@@ -1049,12 +1049,26 @@ renderCountdowns = function() {
 
 const projectForm = document.getElementById('project-form');
 const projectNameInput = document.getElementById('project-name');
+const projectColorPicker = document.getElementById('project-color-picker');
 const projectsList = document.getElementById('projects-list');
 const projectsArchiveList = document.getElementById('projects-archive-list');
 const projectsCanceledList = document.getElementById('projects-canceled-list');
 const emptyProjects = document.getElementById('empty-projects');
 const emptyProjectsArchive = document.getElementById('empty-projects-archive');
 const emptyProjectsCanceled = document.getElementById('empty-projects-canceled');
+
+// Track selected color for new projects
+let selectedProjectColor = 'teal';
+
+// Color picker for new project form
+projectColorPicker.querySelectorAll('.color-swatch').forEach(swatch => {
+    swatch.addEventListener('click', (e) => {
+        e.preventDefault();
+        projectColorPicker.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+        selectedProjectColor = swatch.dataset.color;
+    });
+});
 
 // Project Detail Panel Elements
 const projectDetailPanel = document.getElementById('project-detail-panel');
@@ -1073,6 +1087,7 @@ const projectStatusActions = document.getElementById('project-status-actions');
 const btnCompleteProject = document.getElementById('btn-complete-project');
 const btnCancelProject = document.getElementById('btn-cancel-project');
 const btnShareProject = document.getElementById('btn-share-project');
+const projectPanelColorPicker = document.getElementById('project-panel-color-picker');
 
 // Time Log Elements
 const timeLogEntries = document.getElementById('time-log-entries');
@@ -1111,6 +1126,7 @@ projectForm.addEventListener('submit', (e) => {
     const project = {
         id: Date.now(),
         name,
+        color: selectedProjectColor,
         status: 'active',
         links: [],
         notes: '',
@@ -1121,7 +1137,23 @@ projectForm.addEventListener('submit', (e) => {
     saveProjects();
     renderProjects();
     projectForm.reset();
+
+    // Reset color picker to default (teal)
+    selectedProjectColor = 'teal';
+    projectColorPicker.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    projectColorPicker.querySelector('[data-color="teal"]').classList.add('selected');
 });
+
+// Get color class from project color value
+function getProjectColorClass(colorValue) {
+    const colorMap = {
+        'teal': 'color-teal',
+        'coral': 'color-coral',
+        'mustard': 'color-mustard',
+        'charcoal': 'color-charcoal'
+    };
+    return colorMap[colorValue] || 'color-teal';
+}
 
 // Create project card
 function createProjectCard(project, index = 0, isArchived = false, isCanceled = false) {
@@ -1129,8 +1161,8 @@ function createProjectCard(project, index = 0, isArchived = false, isCanceled = 
     card.className = 'project-card';
     card.dataset.id = project.id;
 
-    // Alternating colors based on unlock state
-    const colorClass = getColorClass(index);
+    // Use project's assigned color (default to teal for legacy projects)
+    const colorClass = getProjectColorClass(project.color || 'teal');
     card.classList.add(colorClass);
 
     if (isArchived) {
@@ -1228,9 +1260,16 @@ function openProjectPanel(projectId) {
     projectAddLinkForm.classList.add('hidden');
     projectBtnAddLink.classList.remove('hidden');
 
-    // Show/hide status actions based on project status
+    // Set up panel color picker
+    const currentColor = project.color || 'teal';
+    projectPanelColorPicker.querySelectorAll('.color-swatch').forEach(swatch => {
+        swatch.classList.toggle('selected', swatch.dataset.color === currentColor);
+    });
+
+    // Show/hide status actions and color picker based on project status
     const isActive = !project.status || project.status === 'active';
     projectStatusActions.classList.toggle('hidden', !isActive);
+    projectPanelColorPicker.classList.toggle('hidden', !isActive);
 
     projectDetailPanel.classList.add('active');
     projectPanelOverlay.classList.add('active');
@@ -1245,6 +1284,27 @@ function closeProjectPanel() {
 
 projectPanelClose.addEventListener('click', closeProjectPanel);
 projectPanelOverlay.addEventListener('click', closeProjectPanel);
+
+// Panel color picker - change project color
+projectPanelColorPicker.querySelectorAll('.color-swatch').forEach(swatch => {
+    swatch.addEventListener('click', () => {
+        if (!currentPanelProject) return;
+
+        const newColor = swatch.dataset.color;
+        const index = projects.findIndex(p => p.id === currentPanelProject.id);
+        if (index === -1) return;
+
+        // Update project color
+        projects[index].color = newColor;
+        projects[index].modifiedAt = new Date().toISOString();
+        saveProjects();
+        renderProjects();
+
+        // Update panel color picker selection
+        projectPanelColorPicker.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+    });
+});
 
 // Render project panel links
 function renderProjectPanelLinks() {
@@ -1655,6 +1715,7 @@ btnShareProject.addEventListener('click', () => {
         exportedAt: new Date().toISOString(),
         project: {
             name: project.name,
+            color: project.color || 'teal',
             links: project.links || [],
             notes: project.notes || '',
             timeLog: project.timeLog || []
@@ -1769,6 +1830,7 @@ function importSingleProject(projectData) {
     const newProject = {
         id: Date.now(),
         name: projectData.name,
+        color: projectData.color || 'teal',
         status: 'active',
         links: projectData.links || [],
         notes: projectData.notes || '',
