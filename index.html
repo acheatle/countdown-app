@@ -25,6 +25,8 @@
                     <span class="data-divider">|</span>
                     <button class="data-btn" id="btn-import">Import</button>
                     <span class="data-divider">|</span>
+                    <button class="data-btn" id="btn-export-time">Time Log</button>
+                    <span class="data-divider">|</span>
                     <button class="data-btn" id="btn-about">About</button>
                     <input type="file" id="import-file" accept=".json" hidden>
                 </div>
@@ -181,6 +183,27 @@
         </div>
     </div>
 
+    <!-- Time Log Export Modal -->
+    <div class="modal" id="time-export-modal">
+        <div class="modal-content modal-content-small">
+            <h2 class="modal-title">Export Time Log</h2>
+            <div class="time-export-form">
+                <div class="time-export-field">
+                    <label>Start Date</label>
+                    <input type="date" id="time-export-start">
+                </div>
+                <div class="time-export-field">
+                    <label>End Date</label>
+                    <input type="date" id="time-export-end">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-yes" id="btn-time-export-confirm">Export CSV</button>
+                <button class="btn btn-no" id="btn-time-export-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Import Modal -->
     <div class="modal" id="import-modal">
         <div class="modal-content">
@@ -291,6 +314,28 @@
             <div class="panel-section">
                 <label class="panel-label">Notes</label>
                 <textarea class="panel-notes" id="project-panel-notes" placeholder="Add notes..."></textarea>
+            </div>
+
+            <!-- Time Log Section -->
+            <div class="panel-section">
+                <label class="panel-label">Time Log</label>
+                <div class="time-log-entries" id="time-log-entries"></div>
+                <div class="time-log-total" id="time-log-total"></div>
+                <div class="add-time-form hidden" id="add-time-form">
+                    <div class="time-form-row">
+                        <input type="date" class="time-input" id="time-log-date">
+                        <input type="number" class="time-input time-input-hours" id="time-log-hours" placeholder="Hours" step="0.25" min="0">
+                    </div>
+                    <input type="text" class="time-input time-input-note" id="time-log-note" placeholder="Note (optional)">
+                    <div class="time-form-actions">
+                        <button type="button" class="btn-time-save" id="btn-time-save">Save</button>
+                        <button type="button" class="btn-time-cancel" id="btn-time-cancel">Cancel</button>
+                    </div>
+                </div>
+                <div class="time-log-buttons">
+                    <button class="btn-add-time" id="btn-add-time">+ Log Time</button>
+                    <button class="btn-export-time-log" id="btn-export-time-panel">Export CSV</button>
+                </div>
             </div>
         </div>
     </aside>

@@ -24,6 +24,23 @@ body {
     color: var(--charcoal);
     line-height: 1.4;
     min-height: 100vh;
+    position: relative;
+}
+
+/* Linen paper texture overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 150px 150px;
 }
 
 .container {
@@ -1163,6 +1180,231 @@ body {
 .panel-notes:focus {
     outline: none;
     border-color: var(--teal-blue);
+}
+
+/* Time Log */
+.time-log-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: var(--spacing-xs);
+}
+
+.time-log-entry {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid rgba(26, 26, 26, 0.1);
+    font-size: 13px;
+}
+
+.time-log-entry-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.time-log-entry-main {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.time-log-date {
+    font-weight: 700;
+    opacity: 0.6;
+}
+
+.time-log-hours {
+    color: var(--teal-blue);
+    font-weight: 700;
+}
+
+.time-log-note {
+    font-size: 12px;
+    opacity: 0.5;
+    font-style: italic;
+}
+
+.time-log-delete {
+    background: none;
+    border: none;
+    color: var(--charcoal);
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0.3;
+    padding: 0 var(--spacing-xs);
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.time-log-delete:hover {
+    opacity: 1;
+    color: var(--coral-red);
+}
+
+.time-log-empty {
+    font-size: 13px;
+    opacity: 0.5;
+    font-style: italic;
+    padding: var(--spacing-xs) 0;
+}
+
+.time-log-total {
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+    padding: var(--spacing-xs) 0;
+    opacity: 0.6;
+    border-top: 1px solid var(--charcoal);
+    margin-top: var(--spacing-xs);
+}
+
+.time-log-total.hidden {
+    display: none;
+}
+
+.add-time-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: white;
+    margin-bottom: var(--spacing-sm);
+}
+
+.add-time-form.hidden {
+    display: none;
+}
+
+.time-form-row {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.time-input {
+    font-family: inherit;
+    font-size: 14px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid #D0D0D0;
+    background: transparent;
+}
+
+.time-input:focus {
+    outline: none;
+    border-color: var(--teal-blue);
+}
+
+.time-input-hours {
+    width: 80px;
+}
+
+.time-input-note {
+    width: 100%;
+}
+
+.time-form-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.btn-time-save,
+.btn-time-cancel {
+    font-family: inherit;
+    font-size: 12px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: none;
+    cursor: pointer;
+}
+
+.btn-time-save {
+    background: var(--charcoal);
+    color: var(--cream);
+}
+
+.btn-time-save:hover {
+    background: var(--teal-blue);
+}
+
+.btn-time-cancel {
+    background: none;
+    border: 1px solid var(--charcoal);
+    color: var(--charcoal);
+    opacity: 0.6;
+}
+
+.btn-time-cancel:hover {
+    opacity: 1;
+}
+
+.btn-add-time {
+    font-family: inherit;
+    font-size: 14px;
+    background: none;
+    border: none;
+    color: var(--charcoal);
+    cursor: pointer;
+    padding: var(--spacing-xs) 0;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.btn-add-time:hover {
+    opacity: 1;
+}
+
+.btn-add-time.hidden {
+    display: none;
+}
+
+.time-log-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+}
+
+.btn-export-time-log {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-family: var(--font-primary);
+    font-size: 13px;
+    color: var(--charcoal);
+    background: none;
+    border: 1px solid var(--charcoal);
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.btn-export-time-log:hover {
+    opacity: 1;
+}
+
+/* Time Export Modal */
+.time-export-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.time-export-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.time-export-field label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+}
+
+.time-export-field input {
+    font-family: inherit;
+    font-size: 16px;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--charcoal);
+    background: transparent;
 }
 
 /* About Panel */

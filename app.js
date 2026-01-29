@@ -1074,6 +1074,26 @@ const btnCompleteProject = document.getElementById('btn-complete-project');
 const btnCancelProject = document.getElementById('btn-cancel-project');
 const btnShareProject = document.getElementById('btn-share-project');
 
+// Time Log Elements
+const timeLogEntries = document.getElementById('time-log-entries');
+const timeLogTotal = document.getElementById('time-log-total');
+const addTimeForm = document.getElementById('add-time-form');
+const btnAddTime = document.getElementById('btn-add-time');
+const timeLogDateInput = document.getElementById('time-log-date');
+const timeLogHoursInput = document.getElementById('time-log-hours');
+const timeLogNoteInput = document.getElementById('time-log-note');
+const btnTimeSave = document.getElementById('btn-time-save');
+const btnTimeCancel = document.getElementById('btn-time-cancel');
+
+// Time Export Elements
+const btnExportTime = document.getElementById('btn-export-time'); // Header button
+const btnExportTimePanel = document.getElementById('btn-export-time-panel'); // Panel button
+const timeExportModal = document.getElementById('time-export-modal');
+const timeExportStart = document.getElementById('time-export-start');
+const timeExportEnd = document.getElementById('time-export-end');
+const btnTimeExportConfirm = document.getElementById('btn-time-export-confirm');
+const btnTimeExportCancel = document.getElementById('btn-time-export-cancel');
+
 let currentPanelProject = null;
 let projectNotesTimeout = null;
 
@@ -1363,6 +1383,264 @@ btnCancelProject.addEventListener('click', () => {
     }
 });
 
+// ============================================
+// Time Logging for Projects
+// ============================================
+
+// Render time log entries
+function renderTimeLogEntries() {
+    if (!currentPanelProject) return;
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project) return;
+
+    const entries = project.timeLog || [];
+
+    if (entries.length === 0) {
+        timeLogEntries.innerHTML = '<div class="time-log-empty">No time entries yet</div>';
+        timeLogTotal.textContent = '';
+        return;
+    }
+
+    // Sort by date (most recent first)
+    const sortedEntries = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    timeLogEntries.innerHTML = sortedEntries.map((entry, index) => {
+        const date = new Date(entry.date);
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return `
+            <div class="time-log-entry">
+                <div class="time-log-entry-info">
+                    <div class="time-log-entry-main">
+                        <span class="time-log-date">${dateStr}</span>
+                        <span class="time-log-hours">${entry.hours}h</span>
+                    </div>
+                    ${entry.note ? `<span class="time-log-note">${escapeHtml(entry.note)}</span>` : ''}
+                </div>
+                <button class="time-log-delete" data-index="${index}">&times;</button>
+            </div>
+        `;
+    }).join('');
+
+    // Add delete handlers
+    timeLogEntries.querySelectorAll('.time-log-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            deleteTimeEntry(index);
+        });
+    });
+
+    // Update total
+    updateTimeLogTotal();
+}
+
+// Update time log total
+function updateTimeLogTotal() {
+    if (!currentPanelProject) return;
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project || !project.timeLog || project.timeLog.length === 0) {
+        timeLogTotal.textContent = '';
+        return;
+    }
+
+    const total = project.timeLog.reduce((sum, entry) => sum + parseFloat(entry.hours), 0);
+    timeLogTotal.textContent = `Total: ${total.toFixed(2)} hours`;
+}
+
+// Add time entry
+function addTimeEntry(date, hours, note) {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1) return;
+
+    if (!projects[index].timeLog) projects[index].timeLog = [];
+
+    projects[index].timeLog.push({
+        id: Date.now(),
+        date: date,
+        hours: parseFloat(hours),
+        note: note || ''
+    });
+    projects[index].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+    renderTimeLogEntries();
+}
+
+// Delete time entry
+function deleteTimeEntry(sortedIndex) {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1) return;
+
+    const entries = projects[index].timeLog || [];
+    // Get sorted entries to find the actual entry to delete
+    const sortedEntries = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const entryToDelete = sortedEntries[sortedIndex];
+
+    // Find and remove by id
+    const actualIndex = entries.findIndex(e => e.id === entryToDelete.id);
+    if (actualIndex !== -1) {
+        projects[index].timeLog.splice(actualIndex, 1);
+        projects[index].modifiedAt = new Date().toISOString();
+        saveProjects();
+        renderTimeLogEntries();
+    }
+}
+
+// Show add time form
+btnAddTime.addEventListener('click', () => {
+    addTimeForm.classList.remove('hidden');
+    btnAddTime.classList.add('hidden');
+    // Set default date to today
+    timeLogDateInput.value = new Date().toISOString().split('T')[0];
+    timeLogHoursInput.value = '';
+    timeLogNoteInput.value = '';
+    timeLogHoursInput.focus();
+});
+
+// Cancel add time form
+btnTimeCancel.addEventListener('click', () => {
+    addTimeForm.classList.add('hidden');
+    btnAddTime.classList.remove('hidden');
+});
+
+// Save time entry
+btnTimeSave.addEventListener('click', () => {
+    const date = timeLogDateInput.value;
+    const hours = timeLogHoursInput.value;
+    const note = timeLogNoteInput.value.trim();
+
+    if (!date || !hours || parseFloat(hours) <= 0) return;
+
+    addTimeEntry(date, hours, note);
+
+    addTimeForm.classList.add('hidden');
+    btnAddTime.classList.remove('hidden');
+});
+
+// Save time on Enter in hours input
+timeLogHoursInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        btnTimeSave.click();
+    }
+});
+
+// Export time log button
+// Open time export modal function
+function openTimeExportModal() {
+    if (!currentPanelProject) {
+        alert('Please open a project to export its time log.');
+        return;
+    }
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project || !project.timeLog || project.timeLog.length === 0) {
+        alert('No time entries to export.');
+        return;
+    }
+
+    // Set default date range (all entries)
+    const entries = project.timeLog;
+    const dates = entries.map(e => new Date(e.date));
+    const minDate = new Date(Math.min(...dates));
+    const maxDate = new Date(Math.max(...dates));
+
+    timeExportStart.value = minDate.toISOString().split('T')[0];
+    timeExportEnd.value = maxDate.toISOString().split('T')[0];
+
+    timeExportModal.classList.add('active');
+}
+
+// Header Time Log button
+btnExportTime.addEventListener('click', openTimeExportModal);
+
+// Panel Export CSV button
+btnExportTimePanel.addEventListener('click', openTimeExportModal);
+
+// Cancel time export
+btnTimeExportCancel.addEventListener('click', () => {
+    timeExportModal.classList.remove('active');
+});
+
+// Close modal on overlay click
+timeExportModal.addEventListener('click', (e) => {
+    if (e.target === timeExportModal) {
+        timeExportModal.classList.remove('active');
+    }
+});
+
+// Confirm time export
+btnTimeExportConfirm.addEventListener('click', () => {
+    if (!currentPanelProject) return;
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project || !project.timeLog) return;
+
+    const startDate = new Date(timeExportStart.value);
+    const endDate = new Date(timeExportEnd.value);
+    endDate.setHours(23, 59, 59, 999); // Include full end day
+
+    // Filter entries by date range
+    const filteredEntries = project.timeLog.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= startDate && entryDate <= endDate;
+    });
+
+    if (filteredEntries.length === 0) {
+        alert('No entries in the selected date range.');
+        return;
+    }
+
+    // Sort by date
+    filteredEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Generate CSV
+    const csvRows = ['Project,Date,Hours,Notes'];
+    filteredEntries.forEach(entry => {
+        const date = new Date(entry.date).toISOString().split('T')[0];
+        const note = entry.note ? `"${entry.note.replace(/"/g, '""')}"` : '';
+        csvRows.push(`"${project.name.replace(/"/g, '""')}",${date},${entry.hours},${note}`);
+    });
+
+    // Add total row
+    const totalHours = filteredEntries.reduce((sum, e) => sum + e.hours, 0);
+    csvRows.push(`"TOTAL",,${totalHours.toFixed(2)},`);
+
+    const csv = csvRows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+
+    // Sanitize filename
+    const sanitizedName = project.name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 30);
+
+    const dateRange = `${timeExportStart.value}_${timeExportEnd.value}`;
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `time-log-${sanitizedName}-${dateRange}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    timeExportModal.classList.remove('active');
+});
+
+// Update openProjectPanel to render time log
+const originalOpenProjectPanel = openProjectPanel;
+openProjectPanel = function(projectId) {
+    originalOpenProjectPanel(projectId);
+    renderTimeLogEntries();
+};
+
 // Share project (export single project)
 btnShareProject.addEventListener('click', () => {
     if (!currentPanelProject) return;
@@ -1378,7 +1656,8 @@ btnShareProject.addEventListener('click', () => {
         project: {
             name: project.name,
             links: project.links || [],
-            notes: project.notes || ''
+            notes: project.notes || '',
+            timeLog: project.timeLog || []
         }
     };
 
@@ -1493,6 +1772,7 @@ function importSingleProject(projectData) {
         status: 'active',
         links: projectData.links || [],
         notes: projectData.notes || '',
+        timeLog: projectData.timeLog || [],
         createdAt: new Date().toISOString(),
         importedAt: new Date().toISOString()
     };
@@ -1501,7 +1781,10 @@ function importSingleProject(projectData) {
     saveProjects();
     renderProjects();
 
-    alert(`Project "${projectData.name}" imported successfully!`);
+    const timeLogInfo = projectData.timeLog && projectData.timeLog.length > 0
+        ? ` with ${projectData.timeLog.length} time entries`
+        : '';
+    alert(`Project "${projectData.name}" imported successfully${timeLogInfo}!`);
 }
 
 // Import - Replace all
