@@ -1109,6 +1109,10 @@ const timeExportEnd = document.getElementById('time-export-end');
 const btnTimeExportConfirm = document.getElementById('btn-time-export-confirm');
 const btnTimeExportCancel = document.getElementById('btn-time-export-cancel');
 
+// Task Elements
+const projectTaskList = document.getElementById('project-task-list');
+const btnAddTask = document.getElementById('btn-add-task');
+
 let currentPanelProject = null;
 let projectNotesTimeout = null;
 
@@ -1128,6 +1132,7 @@ projectForm.addEventListener('submit', (e) => {
         name,
         color: selectedProjectColor,
         status: 'active',
+        tasks: [],
         links: [],
         notes: '',
         createdAt: new Date().toISOString()
@@ -1399,6 +1404,138 @@ projectLinkUrlInput.addEventListener('keydown', (e) => {
         projectBtnLinkSave.click();
     }
 });
+
+// ============================================
+// Project Tasks
+// ============================================
+
+// Render project tasks
+function renderProjectTasks() {
+    if (!currentPanelProject) return;
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project) return;
+
+    const tasks = project.tasks || [];
+
+    if (tasks.length === 0) {
+        projectTaskList.innerHTML = '<div class="task-empty">No tasks yet</div>';
+        return;
+    }
+
+    projectTaskList.innerHTML = tasks.map((task, index) => `
+        <div class="task-item ${task.completed ? 'completed' : ''}" data-index="${index}">
+            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-index="${index}">
+            <input type="text" class="task-text" value="${escapeHtml(task.text)}" data-index="${index}">
+            <button class="task-delete" data-index="${index}">&times;</button>
+        </div>
+    `).join('');
+
+    // Add event listeners
+    projectTaskList.querySelectorAll('.task-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            toggleTask(index);
+        });
+    });
+
+    projectTaskList.querySelectorAll('.task-text').forEach(input => {
+        input.addEventListener('blur', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            updateTaskText(index, e.target.value);
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.target.blur();
+            }
+        });
+    });
+
+    projectTaskList.querySelectorAll('.task-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            deleteTask(index);
+        });
+    });
+}
+
+// Add new task
+function addTask() {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1) return;
+
+    if (!projects[index].tasks) projects[index].tasks = [];
+
+    projects[index].tasks.push({
+        id: Date.now(),
+        text: '',
+        completed: false
+    });
+    projects[index].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+    renderProjectTasks();
+
+    // Focus the new task input
+    const lastInput = projectTaskList.querySelector('.task-item:last-child .task-text');
+    if (lastInput) {
+        lastInput.focus();
+    }
+}
+
+// Toggle task completion
+function toggleTask(taskIndex) {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1 || !projects[index].tasks) return;
+
+    projects[index].tasks[taskIndex].completed = !projects[index].tasks[taskIndex].completed;
+    projects[index].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+    renderProjectTasks();
+}
+
+// Update task text
+function updateTaskText(taskIndex, newText) {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1 || !projects[index].tasks) return;
+
+    const trimmedText = newText.trim();
+
+    // If text is empty, delete the task
+    if (!trimmedText) {
+        deleteTask(taskIndex);
+        return;
+    }
+
+    projects[index].tasks[taskIndex].text = trimmedText;
+    projects[index].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+}
+
+// Delete task
+function deleteTask(taskIndex) {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1 || !projects[index].tasks) return;
+
+    projects[index].tasks.splice(taskIndex, 1);
+    projects[index].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+    renderProjectTasks();
+}
+
+// Add task button
+btnAddTask.addEventListener('click', addTask);
 
 // Project notes auto-save
 projectPanelNotes.addEventListener('input', () => {
@@ -1764,6 +1901,7 @@ btnTimeExportConfirm.addEventListener('click', () => {
 const originalOpenProjectPanel = openProjectPanel;
 openProjectPanel = function(projectId) {
     originalOpenProjectPanel(projectId);
+    renderProjectTasks();
     renderTimeLogEntries();
 };
 
@@ -1782,6 +1920,7 @@ btnShareProject.addEventListener('click', () => {
         project: {
             name: project.name,
             color: project.color || 'teal',
+            tasks: project.tasks || [],
             links: project.links || [],
             notes: project.notes || '',
             timeLog: project.timeLog || []
@@ -1898,6 +2037,7 @@ function importSingleProject(projectData) {
         name: projectData.name,
         color: projectData.color || 'teal',
         status: 'active',
+        tasks: projectData.tasks || [],
         links: projectData.links || [],
         notes: projectData.notes || '',
         timeLog: projectData.timeLog || [],
@@ -1909,10 +2049,15 @@ function importSingleProject(projectData) {
     saveProjects();
     renderProjects();
 
-    const timeLogInfo = projectData.timeLog && projectData.timeLog.length > 0
-        ? ` with ${projectData.timeLog.length} time entries`
+    const taskInfo = projectData.tasks && projectData.tasks.length > 0
+        ? `${projectData.tasks.length} tasks`
         : '';
-    alert(`Project "${projectData.name}" imported successfully${timeLogInfo}!`);
+    const timeLogInfo = projectData.timeLog && projectData.timeLog.length > 0
+        ? `${projectData.timeLog.length} time entries`
+        : '';
+    const extras = [taskInfo, timeLogInfo].filter(Boolean).join(', ');
+    const extraInfo = extras ? ` with ${extras}` : '';
+    alert(`Project "${projectData.name}" imported successfully${extraInfo}!`);
 }
 
 // Import - Replace all

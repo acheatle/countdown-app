@@ -1226,6 +1226,127 @@ body::before {
     opacity: 1;
 }
 
+/* Tasks */
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(26, 26, 26, 0.08);
+}
+
+.task-item:last-child {
+    border-bottom: none;
+}
+
+.task-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--charcoal);
+    border-radius: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    background: transparent;
+}
+
+.task-checkbox:checked {
+    background: var(--charcoal);
+}
+
+.task-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--cream);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.task-text {
+    flex: 1;
+    font-family: inherit;
+    font-size: 14px;
+    border: none;
+    background: transparent;
+    padding: 2px 0;
+    color: var(--charcoal);
+    outline: none;
+}
+
+.task-text:focus {
+    border-bottom: 1px solid var(--teal-blue);
+    margin-bottom: -1px;
+}
+
+.task-item.completed .task-text {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
+.task-delete {
+    background: none;
+    border: none;
+    color: var(--charcoal);
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    padding: 0 4px;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+}
+
+.task-item:hover .task-delete {
+    opacity: 0.3;
+}
+
+.task-delete:hover {
+    opacity: 1 !important;
+    color: var(--coral-red);
+}
+
+.btn-add-task {
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--charcoal);
+    background: none;
+    border: 1px dashed rgba(26, 26, 26, 0.3);
+    border-radius: 2px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.15s, border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--spacing-xs);
+}
+
+.btn-add-task:hover {
+    opacity: 1;
+    border-color: var(--charcoal);
+}
+
+.task-empty {
+    font-size: 13px;
+    opacity: 0.5;
+    font-style: italic;
+    padding: 4px 0;
+}
+
 /* Notes */
 .panel-notes {
     font-family: inherit;
