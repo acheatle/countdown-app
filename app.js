@@ -1591,7 +1591,49 @@ timeLogHoursInput.addEventListener('keydown', (e) => {
 
 // Export time log button
 // Open time export modal function
-function openTimeExportModal() {
+// Track export mode: 'all' for all projects, 'single' for current project only
+let timeExportMode = 'all';
+
+// Get all time entries across all projects
+function getAllTimeEntries() {
+    const allEntries = [];
+    projects.forEach(project => {
+        if (project.timeLog && project.timeLog.length > 0) {
+            project.timeLog.forEach(entry => {
+                allEntries.push({
+                    ...entry,
+                    projectName: project.name
+                });
+            });
+        }
+    });
+    return allEntries;
+}
+
+// Open time export modal for all projects (header button)
+function openTimeExportModalAll() {
+    const allEntries = getAllTimeEntries();
+
+    if (allEntries.length === 0) {
+        alert('No time entries to export. Log time in a project first.');
+        return;
+    }
+
+    timeExportMode = 'all';
+
+    // Set default date range (all entries across all projects)
+    const dates = allEntries.map(e => new Date(e.date));
+    const minDate = new Date(Math.min(...dates));
+    const maxDate = new Date(Math.max(...dates));
+
+    timeExportStart.value = minDate.toISOString().split('T')[0];
+    timeExportEnd.value = maxDate.toISOString().split('T')[0];
+
+    timeExportModal.classList.add('active');
+}
+
+// Open time export modal for single project (panel button)
+function openTimeExportModalSingle() {
     if (!currentPanelProject) {
         alert('Please open a project to export its time log.');
         return;
@@ -1599,11 +1641,13 @@ function openTimeExportModal() {
 
     const project = projects.find(p => p.id === currentPanelProject.id);
     if (!project || !project.timeLog || project.timeLog.length === 0) {
-        alert('No time entries to export.');
+        alert('No time entries to export for this project.');
         return;
     }
 
-    // Set default date range (all entries)
+    timeExportMode = 'single';
+
+    // Set default date range (entries for this project)
     const entries = project.timeLog;
     const dates = entries.map(e => new Date(e.date));
     const minDate = new Date(Math.min(...dates));
@@ -1615,11 +1659,11 @@ function openTimeExportModal() {
     timeExportModal.classList.add('active');
 }
 
-// Header Time Log button
-btnExportTime.addEventListener('click', openTimeExportModal);
+// Header Time Log button - exports all projects
+btnExportTime.addEventListener('click', openTimeExportModalAll);
 
-// Panel Export CSV button
-btnExportTimePanel.addEventListener('click', openTimeExportModal);
+// Panel Export CSV button - exports current project only
+btnExportTimePanel.addEventListener('click', openTimeExportModalSingle);
 
 // Cancel time export
 btnTimeExportCancel.addEventListener('click', () => {
@@ -1635,57 +1679,79 @@ timeExportModal.addEventListener('click', (e) => {
 
 // Confirm time export
 btnTimeExportConfirm.addEventListener('click', () => {
-    if (!currentPanelProject) return;
-
-    const project = projects.find(p => p.id === currentPanelProject.id);
-    if (!project || !project.timeLog) return;
-
     const startDate = new Date(timeExportStart.value);
     const endDate = new Date(timeExportEnd.value);
     endDate.setHours(23, 59, 59, 999); // Include full end day
 
-    // Filter entries by date range
-    const filteredEntries = project.timeLog.filter(entry => {
-        const entryDate = new Date(entry.date);
-        return entryDate >= startDate && entryDate <= endDate;
-    });
+    let entriesToExport = [];
+    let filename = '';
 
-    if (filteredEntries.length === 0) {
+    if (timeExportMode === 'all') {
+        // Export all projects
+        const allEntries = getAllTimeEntries();
+        entriesToExport = allEntries.filter(entry => {
+            const entryDate = new Date(entry.date);
+            return entryDate >= startDate && entryDate <= endDate;
+        });
+        filename = `time-log-all-projects`;
+    } else {
+        // Export single project
+        if (!currentPanelProject) return;
+
+        const project = projects.find(p => p.id === currentPanelProject.id);
+        if (!project || !project.timeLog) return;
+
+        entriesToExport = project.timeLog
+            .filter(entry => {
+                const entryDate = new Date(entry.date);
+                return entryDate >= startDate && entryDate <= endDate;
+            })
+            .map(entry => ({
+                ...entry,
+                projectName: project.name
+            }));
+
+        const sanitizedName = project.name
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .substring(0, 30);
+        filename = `time-log-${sanitizedName}`;
+    }
+
+    if (entriesToExport.length === 0) {
         alert('No entries in the selected date range.');
         return;
     }
 
-    // Sort by date
-    filteredEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Sort by date, then by project name
+    entriesToExport.sort((a, b) => {
+        const dateCompare = new Date(a.date) - new Date(b.date);
+        if (dateCompare !== 0) return dateCompare;
+        return a.projectName.localeCompare(b.projectName);
+    });
 
     // Generate CSV
     const csvRows = ['Project,Date,Hours,Notes'];
-    filteredEntries.forEach(entry => {
+    entriesToExport.forEach(entry => {
         const date = new Date(entry.date).toISOString().split('T')[0];
         const note = entry.note ? `"${entry.note.replace(/"/g, '""')}"` : '';
-        csvRows.push(`"${project.name.replace(/"/g, '""')}",${date},${entry.hours},${note}`);
+        csvRows.push(`"${entry.projectName.replace(/"/g, '""')}",${date},${entry.hours},${note}`);
     });
 
     // Add total row
-    const totalHours = filteredEntries.reduce((sum, e) => sum + e.hours, 0);
+    const totalHours = entriesToExport.reduce((sum, e) => sum + e.hours, 0);
     csvRows.push(`"TOTAL",,${totalHours.toFixed(2)},`);
 
     const csv = csvRows.join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
 
-    // Sanitize filename
-    const sanitizedName = project.name
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .substring(0, 30);
-
     const dateRange = `${timeExportStart.value}_${timeExportEnd.value}`;
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = `time-log-${sanitizedName}-${dateRange}.csv`;
+    a.download = `${filename}-${dateRange}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
