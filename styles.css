@@ -82,6 +82,7 @@ body::before {
     font-size: 13px;
     padding: 6px 12px;
     border: none;
+    border-radius: 8px;
     cursor: pointer;
     transition: opacity 0.15s;
 }
@@ -305,6 +306,7 @@ body::before {
     font-size: 16px;
     padding: var(--spacing-sm);
     border: 1px solid #D0D0D0;
+    border-radius: 8px;
     background: transparent;
     color: var(--charcoal);
 }
@@ -321,6 +323,7 @@ body::before {
     background: var(--charcoal);
     color: var(--cream);
     border: none;
+    border-radius: 8px;
     cursor: pointer;
     transition: background 0.2s;
 }
@@ -349,6 +352,8 @@ body::before {
     display: grid;
     grid-template-columns: 70px 1fr 80px;
     background: white;
+    border-radius: 8px;
+    overflow: hidden;
     cursor: pointer;
     transition: box-shadow 0.2s;
 }
@@ -442,6 +447,7 @@ body::before {
     padding: var(--spacing-xs) var(--spacing-sm);
     background: none;
     border: 1px solid var(--charcoal);
+    border-radius: 8px;
     color: var(--charcoal);
     cursor: pointer;
     opacity: 0.4;
@@ -549,6 +555,8 @@ body::before {
     display: grid;
     grid-template-columns: 70px 1fr 80px;
     background: white;
+    border-radius: 8px;
+    overflow: hidden;
     cursor: pointer;
     transition: box-shadow 0.2s;
 }
@@ -721,6 +729,7 @@ body::before {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 8px;
     cursor: pointer;
     transition: opacity 0.2s, background 0.2s;
 }
@@ -761,6 +770,7 @@ body::before {
     padding: var(--spacing-xs) var(--spacing-sm);
     background: none;
     border: 1px solid var(--charcoal);
+    border-radius: 8px;
     color: var(--charcoal);
     cursor: pointer;
     opacity: 0.5;
@@ -806,6 +816,7 @@ body::before {
     max-width: 480px;
     width: 90%;
     text-align: center;
+    border-radius: 8px;
 }
 
 .modal-title {
@@ -836,6 +847,7 @@ body::before {
     font-size: 14px;
     padding: var(--spacing-sm) var(--spacing-lg);
     border: none;
+    border-radius: 8px;
     cursor: pointer;
     transition: background 0.2s;
 }
@@ -900,6 +912,7 @@ body::before {
     width: 80px;
     padding: var(--spacing-sm);
     border: 1px solid var(--charcoal);
+    border-radius: 8px;
     background: transparent;
     text-align: center;
 }
@@ -1045,6 +1058,7 @@ body::before {
     height: 100%;
     background: var(--cream);
     box-shadow: -4px 0 24px rgba(26, 26, 26, 0.15);
+    border-radius: 8px 0 0 8px;
     transform: translateX(100%);
     transition: transform 0.3s ease;
     z-index: 1001;
@@ -1318,6 +1332,7 @@ body::before {
     gap: var(--spacing-xs);
     padding: var(--spacing-sm);
     background: white;
+    border-radius: 8px;
     margin-bottom: var(--spacing-sm);
 }
 
@@ -1330,6 +1345,7 @@ body::before {
     font-size: 14px;
     padding: var(--spacing-xs) var(--spacing-sm);
     border: 1px solid var(--charcoal);
+    border-radius: 8px;
     background: transparent;
 }
 
@@ -1349,6 +1365,7 @@ body::before {
     font-size: 12px;
     padding: var(--spacing-xs) var(--spacing-sm);
     border: none;
+    border-radius: 8px;
     cursor: pointer;
 }
 
@@ -1501,6 +1518,7 @@ body::before {
     min-height: 150px;
     padding: var(--spacing-sm);
     border: 1px solid var(--charcoal);
+    border-radius: 8px;
     background: white;
     resize: vertical;
     line-height: 1.6;
@@ -1615,6 +1633,7 @@ body::before {
     font-size: 14px;
     padding: var(--spacing-xs) var(--spacing-sm);
     border: 1px solid #D0D0D0;
+    border-radius: 8px;
     background: transparent;
 }
 
@@ -1642,6 +1661,7 @@ body::before {
     font-size: 12px;
     padding: var(--spacing-xs) var(--spacing-sm);
     border: none;
+    border-radius: 8px;
     cursor: pointer;
 }
 
@@ -1698,6 +1718,7 @@ body::before {
     color: var(--charcoal);
     background: none;
     border: 1px solid var(--charcoal);
+    border-radius: 8px;
     cursor: pointer;
     opacity: 0.6;
     transition: opacity 0.2s;
@@ -1733,6 +1754,7 @@ body::before {
     font-size: 16px;
     padding: var(--spacing-sm);
     border: 1px solid var(--charcoal);
+    border-radius: 8px;
     background: transparent;
 }
 
@@ -1765,6 +1787,7 @@ body::before {
     height: 100%;
     background: var(--cream);
     box-shadow: -4px 0 24px rgba(26, 26, 26, 0.15);
+    border-radius: 8px 0 0 8px;
     transform: translateX(100%);
     transition: transform 0.3s ease;
     z-index: 1001;
