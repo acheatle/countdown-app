@@ -1965,7 +1965,8 @@ let pendingImportData = null;
 let pendingImportProjects = null;
 
 // Export data
-btnExport.addEventListener('click', () => {
+// Perform export and update last export date
+function performExport() {
     const data = {
         version: 2,
         exportedAt: new Date().toISOString(),
@@ -1988,7 +1989,13 @@ btnExport.addEventListener('click', () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-});
+
+    // Update last export date for backup reminder
+    localStorage.setItem('lastExportDate', new Date().toISOString());
+    hideBackupBanner();
+}
+
+btnExport.addEventListener('click', performExport);
 
 // Import button - trigger file picker
 btnImport.addEventListener('click', () => {
@@ -2876,3 +2883,97 @@ document.addEventListener('keydown', (e) => {
         rotateShape(selectedShape, e.shiftKey ? -45 : 45);
     }
 });
+
+// ============================================
+// Backup Reminder
+// ============================================
+
+const backupBanner = document.getElementById('backup-banner');
+const backupMessage = document.getElementById('backup-message');
+const backupExportNow = document.getElementById('backup-export-now');
+const backupRemindLater = document.getElementById('backup-remind-later');
+
+const BACKUP_REMINDER_DAYS = 7;
+const REMIND_LATER_HOURS = 24;
+
+function showBackupBanner(daysSinceBackup) {
+    const days = Math.floor(daysSinceBackup);
+    const dayText = days === 1 ? 'day' : 'days';
+    backupMessage.textContent = `It's been ${days} ${dayText} since your last backup. Export your data?`;
+    backupBanner.classList.remove('hidden');
+}
+
+function hideBackupBanner() {
+    backupBanner.classList.add('hidden');
+}
+
+function checkBackupReminder() {
+    const lastExportDate = localStorage.getItem('lastExportDate');
+    const lastReminderDismissed = localStorage.getItem('lastReminderDismissed');
+
+    // If never exported, check if there's any data worth backing up
+    if (!lastExportDate) {
+        // Only remind if there's actually data to back up
+        if (countdowns.length > 0 || projects.length > 0) {
+            // Check if we have any data older than 7 days
+            const oldestCountdown = countdowns.reduce((oldest, c) => {
+                const date = new Date(c.createdAt);
+                return !oldest || date < oldest ? date : oldest;
+            }, null);
+            const oldestProject = projects.reduce((oldest, p) => {
+                const date = new Date(p.createdAt);
+                return !oldest || date < oldest ? date : oldest;
+            }, null);
+
+            const oldest = oldestCountdown && oldestProject
+                ? (oldestCountdown < oldestProject ? oldestCountdown : oldestProject)
+                : (oldestCountdown || oldestProject);
+
+            if (oldest) {
+                const daysSinceCreation = (Date.now() - oldest.getTime()) / (1000 * 60 * 60 * 24);
+                if (daysSinceCreation >= BACKUP_REMINDER_DAYS) {
+                    // Check if dismissed recently
+                    if (lastReminderDismissed) {
+                        const dismissedTime = new Date(lastReminderDismissed).getTime();
+                        const hoursSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60);
+                        if (hoursSinceDismissed < REMIND_LATER_HOURS) {
+                            return; // Don't show, was dismissed recently
+                        }
+                    }
+                    showBackupBanner(daysSinceCreation);
+                }
+            }
+        }
+        return;
+    }
+
+    // Check days since last export
+    const lastExport = new Date(lastExportDate).getTime();
+    const daysSinceExport = (Date.now() - lastExport) / (1000 * 60 * 60 * 24);
+
+    if (daysSinceExport >= BACKUP_REMINDER_DAYS) {
+        // Check if dismissed recently
+        if (lastReminderDismissed) {
+            const dismissedTime = new Date(lastReminderDismissed).getTime();
+            const hoursSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60);
+            if (hoursSinceDismissed < REMIND_LATER_HOURS) {
+                return; // Don't show, was dismissed recently
+            }
+        }
+        showBackupBanner(daysSinceExport);
+    }
+}
+
+// Export Now button
+backupExportNow.addEventListener('click', () => {
+    performExport();
+});
+
+// Remind Me Later button
+backupRemindLater.addEventListener('click', () => {
+    localStorage.setItem('lastReminderDismissed', new Date().toISOString());
+    hideBackupBanner();
+});
+
+// Check on app load
+checkBackupReminder();

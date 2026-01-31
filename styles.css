@@ -44,6 +44,68 @@ body::before {
     background-size: 150px 150px;
 }
 
+/* Backup Reminder Banner */
+.backup-banner {
+    background: var(--cream);
+    border-bottom: 1px solid rgba(26, 26, 26, 0.15);
+    padding: var(--spacing-sm) var(--spacing-md);
+    position: relative;
+    z-index: 100;
+}
+
+.backup-banner.hidden {
+    display: none;
+}
+
+.backup-banner-content {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.backup-message {
+    font-size: 14px;
+    color: var(--charcoal);
+}
+
+.backup-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
+}
+
+.backup-btn {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px 12px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.backup-btn-primary {
+    background: var(--coral-red);
+    color: var(--cream);
+}
+
+.backup-btn-primary:hover {
+    opacity: 0.85;
+}
+
+.backup-btn-secondary {
+    background: transparent;
+    color: var(--charcoal);
+    border: 1px solid var(--charcoal);
+    opacity: 0.6;
+}
+
+.backup-btn-secondary:hover {
+    opacity: 1;
+}
+
 .container {
     max-width: 960px;
     margin: 0 auto;

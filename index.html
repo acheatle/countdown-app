@@ -7,6 +7,17 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Backup Reminder Banner -->
+    <div class="backup-banner hidden" id="backup-banner">
+        <div class="backup-banner-content">
+            <span class="backup-message" id="backup-message">It's been 7 days since your last backup. Export your data?</span>
+            <div class="backup-actions">
+                <button class="backup-btn backup-btn-primary" id="backup-export-now">Export Now</button>
+                <button class="backup-btn backup-btn-secondary" id="backup-remind-later">Remind Me Later</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <header class="header">
             <div class="header-left">
