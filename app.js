@@ -1193,7 +1193,7 @@ function getProjectColorClass(colorValue) {
         'teal': 'color-teal',
         'coral': 'color-coral',
         'mustard': 'color-mustard',
-        'charcoal': 'color-charcoal'
+        'plum': 'color-plum'
     };
     return colorMap[colorValue] || 'color-teal';
 }
@@ -2919,8 +2919,8 @@ let pongRunning = false;
 let pongAnimationId = null;
 
 // Game colors
-const PONG_PADDLE_COLOR = '#4A9B9B'; // Teal
-const PONG_BALL_COLOR = '#D85846'; // Coral
+const PONG_PADDLE_COLOR = '#8DC6BF'; // Teal
+const PONG_BALL_COLOR = '#F97B4F'; // Coral
 const PONG_BORDER_COLOR = '#1A1A1A'; // Charcoal
 
 // Game objects

@@ -1,9 +1,11 @@
 /* Swiss/International Design System */
 :root {
-    --coral-red: #D85846;
-    --teal-blue: #4A9B9B;
-    --mustard-yellow: #D4A574;
-    --mustard: #D4A574;
+    --coral-red: #F97B4F;
+    --teal-blue: #8DC6BF;
+    --yellow: #FCBC66;
+    --mustard-yellow: #FCBC66;
+    --mustard: #FCBC66;
+    --plum: #584053;
     --charcoal: #1A1A1A;
     --cream: #F5F0E8;
     --spacing-xs: 8px;
@@ -374,8 +376,8 @@ body::before {
     background: var(--mustard-yellow);
 }
 
-.countdown-card.color-charcoal .countdown-color-block {
-    background: var(--charcoal);
+.countdown-card.color-plum .countdown-color-block {
+    background: var(--plum);
 }
 
 .countdown-card.archived {
@@ -577,8 +579,8 @@ body::before {
     background: var(--mustard-yellow);
 }
 
-.project-card.color-charcoal .project-color-block {
-    background: var(--charcoal);
+.project-card.color-plum .project-color-block {
+    background: var(--plum);
 }
 
 .project-color-block {
@@ -1898,13 +1900,13 @@ body::before {
     background: var(--mustard-yellow);
 }
 
-.grid-view .countdown-card.color-charcoal,
-.grid-view .project-card.color-charcoal {
-    background: var(--charcoal);
+.grid-view .countdown-card.color-plum,
+.grid-view .project-card.color-plum {
+    background: var(--plum);
 }
 
-.grid-view .countdown-card.color-charcoal .grid-content,
-.grid-view .project-card.color-charcoal .grid-content {
+.grid-view .countdown-card.color-plum .grid-content,
+.grid-view .project-card.color-plum .grid-content {
     color: var(--cream);
 }
 
@@ -1926,7 +1928,7 @@ body::before {
     fill: var(--cream);
 }
 
-.grid-view .project-card.color-charcoal .project-pin svg {
+.grid-view .project-card.color-plum .project-pin svg {
     fill: var(--cream);
 }
 
@@ -2328,7 +2330,7 @@ body::before {
 .fidget-shape-btn[data-color="teal"] { background: var(--teal-blue); }
 .fidget-shape-btn[data-color="coral"] { background: var(--coral-red); }
 .fidget-shape-btn[data-color="mustard"] { background: var(--mustard-yellow); }
-.fidget-shape-btn[data-color="charcoal"] { background: var(--charcoal); }
+.fidget-shape-btn[data-color="plum"] { background: var(--plum); }
 .fidget-shape-btn[data-color="cream"] {
     background: var(--cream);
     border: 1px solid rgba(26, 26, 26, 0.2);
@@ -2384,7 +2386,7 @@ body::before {
 .fidget-shape[data-color="teal"] { background: var(--teal-blue); }
 .fidget-shape[data-color="coral"] { background: var(--coral-red); }
 .fidget-shape[data-color="mustard"] { background: var(--mustard-yellow); }
-.fidget-shape[data-color="charcoal"] { background: var(--charcoal); }
+.fidget-shape[data-color="plum"] { background: var(--plum); }
 .fidget-shape[data-color="cream"] {
     background: var(--cream);
     border: 1px solid rgba(26, 26, 26, 0.15);
