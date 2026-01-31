@@ -4,6 +4,35 @@ let projects = JSON.parse(localStorage.getItem('projects')) || [];
 let currentModalCountdown = null;
 let mustardUnlocked = localStorage.getItem('mustardUnlocked') === 'true';
 
+// Delete confirmation modal
+const deleteModal = document.getElementById('delete-modal');
+const deleteModalMessage = document.getElementById('delete-modal-message');
+const btnDeleteConfirm = document.getElementById('btn-delete-confirm');
+const btnDeleteCancel = document.getElementById('btn-delete-cancel');
+let deleteCallback = null;
+
+function showDeleteConfirm(message, onConfirm) {
+    deleteModalMessage.textContent = message;
+    deleteCallback = onConfirm;
+    deleteModal.classList.add('active');
+}
+
+function hideDeleteConfirm() {
+    deleteModal.classList.remove('active');
+    deleteCallback = null;
+}
+
+btnDeleteConfirm.addEventListener('click', () => {
+    if (deleteCallback) deleteCallback();
+    hideDeleteConfirm();
+});
+
+btnDeleteCancel.addEventListener('click', hideDeleteConfirm);
+
+deleteModal.addEventListener('click', (e) => {
+    if (e.target === deleteModal) hideDeleteConfirm();
+});
+
 // Get color class based on index
 function getColorClass(index) {
     if (mustardUnlocked) {
@@ -330,12 +359,15 @@ function renderCountdowns() {
     emptyCanceled.classList.toggle('hidden', canceled.length > 0);
 
     // Add delete event listeners
-    document.querySelectorAll('.btn-delete').forEach(btn => {
+    document.querySelectorAll('#tab-countdowns .btn-delete').forEach(btn => {
         btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const id = parseInt(e.target.dataset.id);
-            countdowns = countdowns.filter(c => c.id !== id);
-            saveCountdowns();
-            renderCountdowns();
+            showDeleteConfirm('Are you sure you want to delete this countdown?', () => {
+                countdowns = countdowns.filter(c => c.id !== id);
+                saveCountdowns();
+                renderCountdowns();
+            });
         });
     });
 }
@@ -1127,11 +1159,17 @@ projectForm.addEventListener('submit', (e) => {
     const name = projectNameInput.value.trim();
     if (!name) return;
 
+    // Calculate order for new project (add at end of unpinned)
+    const unpinnedActive = projects.filter(p => (!p.status || p.status === 'active') && !p.pinned);
+    const maxOrder = unpinnedActive.reduce((max, p) => Math.max(max, p.order || 0), 0);
+
     const project = {
         id: Date.now(),
         name,
         color: selectedProjectColor,
         status: 'active',
+        pinned: false,
+        order: maxOrder + 1,
         tasks: [],
         links: [],
         notes: '',
@@ -1160,6 +1198,10 @@ function getProjectColorClass(colorValue) {
     return colorMap[colorValue] || 'color-teal';
 }
 
+// Pin icon SVGs
+const PIN_ICON_FILLED = `<svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>`;
+const PIN_ICON_OUTLINE = `<svg viewBox="0 0 24 24"><path d="M14 4v5c0 1.12.37 2.16 1 3H9c.65-.86 1-1.9 1-3V4h4m3-2H7v2h1v5c0 1.1-.9 2-2 2v2h5.97v6h2.03v-6H19v-2c-1.1 0-2-.9-2-2V4h1V2z"/></svg>`;
+
 // Create project card
 function createProjectCard(project, index = 0, isArchived = false, isCanceled = false) {
     const card = document.createElement('div');
@@ -1178,7 +1220,19 @@ function createProjectCard(project, index = 0, isArchived = false, isCanceled = 
         card.classList.add('canceled');
     }
 
+    // Only make active projects draggable
+    const isActive = !isArchived && !isCanceled;
+    if (isActive) {
+        card.setAttribute('draggable', 'true');
+        card.classList.add('draggable');
+    }
+
+    const isPinned = project.pinned || false;
+    const pinIcon = isPinned ? PIN_ICON_FILLED : PIN_ICON_OUTLINE;
+    const pinClass = isPinned ? 'pinned' : '';
+
     card.innerHTML = `
+        ${isActive ? `<button class="project-pin ${pinClass}" data-id="${project.id}" title="${isPinned ? 'Unpin' : 'Pin'}">${pinIcon}</button>` : ''}
         <div class="project-color-block"></div>
         <div class="project-info">
             <div class="project-name">${escapeHtml(project.name)}</div>
@@ -1196,20 +1250,42 @@ function createProjectCard(project, index = 0, isArchived = false, isCanceled = 
     return card;
 }
 
+// Sort projects by pinned status and order
+function sortActiveProjects(projectList) {
+    // Separate pinned and unpinned
+    const pinned = projectList.filter(p => p.pinned);
+    const unpinned = projectList.filter(p => !p.pinned);
+
+    // Sort each group by order (or by name if no order set)
+    const sortByOrder = (a, b) => {
+        const orderA = a.order !== undefined ? a.order : Infinity;
+        const orderB = b.order !== undefined ? b.order : Infinity;
+        if (orderA === orderB) return a.name.localeCompare(b.name);
+        return orderA - orderB;
+    };
+
+    pinned.sort(sortByOrder);
+    unpinned.sort(sortByOrder);
+
+    return [...pinned, ...unpinned];
+}
+
 // Render projects
 function renderProjects() {
     const active = projects.filter(p => !p.status || p.status === 'active');
     const archived = projects.filter(p => p.status === 'archived');
     const canceled = projects.filter(p => p.status === 'canceled');
 
-    // Sort alphabetically
-    active.sort((a, b) => a.name.localeCompare(b.name));
+    // Sort active by pinned status and order
+    const sortedActive = sortActiveProjects(active);
+
+    // Sort archived and canceled alphabetically
     archived.sort((a, b) => a.name.localeCompare(b.name));
     canceled.sort((a, b) => a.name.localeCompare(b.name));
 
     // Render active
     projectsList.innerHTML = '';
-    active.forEach((project, index) => {
+    sortedActive.forEach((project, index) => {
         projectsList.appendChild(createProjectCard(project, index));
     });
 
@@ -1226,29 +1302,184 @@ function renderProjects() {
     });
 
     // Show/hide empty states
-    emptyProjects.classList.toggle('hidden', active.length > 0);
+    emptyProjects.classList.toggle('hidden', sortedActive.length > 0);
     emptyProjectsArchive.classList.toggle('hidden', archived.length > 0);
     emptyProjectsCanceled.classList.toggle('hidden', canceled.length > 0);
 
-    // Add click handlers
-    setupProjectClickHandlers();
+    // Add click handlers and drag-drop
+    setupProjectInteractions();
 }
 
-// Setup project click handlers
-function setupProjectClickHandlers() {
+// Toggle project pin status
+function toggleProjectPin(projectId) {
+    const index = projects.findIndex(p => p.id === projectId);
+    if (index === -1) return;
+
+    projects[index].pinned = !projects[index].pinned;
+    projects[index].modifiedAt = new Date().toISOString();
+
+    // Reset order when pinning/unpinning to put at end of respective section
+    const active = projects.filter(p => (!p.status || p.status === 'active') && p.id !== projectId);
+    const sameSection = active.filter(p => p.pinned === projects[index].pinned);
+    const maxOrder = sameSection.reduce((max, p) => Math.max(max, p.order || 0), 0);
+    projects[index].order = maxOrder + 1;
+
+    saveProjects();
+    renderProjects();
+}
+
+// Drag and drop state
+let draggedProject = null;
+let draggedProjectId = null;
+
+// Setup all project interactions (click and drag)
+function setupProjectInteractions() {
     document.querySelectorAll('#tab-projects .project-card').forEach(card => {
+        // Click handler
         card.addEventListener('click', (e) => {
-            if (e.target.classList.contains('btn-delete')) {
-                const id = parseInt(e.target.dataset.id);
-                projects = projects.filter(p => p.id !== id);
-                saveProjects();
-                renderProjects();
+            // Don't handle click if we just finished dragging
+            if (card.classList.contains('was-dragging')) {
+                card.classList.remove('was-dragging');
                 return;
             }
+
+            // Handle delete button
+            if (e.target.classList.contains('btn-delete')) {
+                e.stopPropagation();
+                const id = parseInt(e.target.dataset.id);
+                showDeleteConfirm('Are you sure you want to delete this project?', () => {
+                    projects = projects.filter(p => p.id !== id);
+                    saveProjects();
+                    renderProjects();
+                });
+                return;
+            }
+
+            // Handle pin button
+            if (e.target.closest('.project-pin')) {
+                e.stopPropagation();
+                const id = parseInt(e.target.closest('.project-pin').dataset.id);
+                toggleProjectPin(id);
+                return;
+            }
+
             const id = parseInt(card.dataset.id);
             openProjectPanel(id);
         });
+
+        // Drag handlers (only for draggable cards)
+        if (card.classList.contains('draggable')) {
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+            card.addEventListener('dragover', handleDragOver);
+            card.addEventListener('dragenter', handleDragEnter);
+            card.addEventListener('dragleave', handleDragLeave);
+            card.addEventListener('drop', handleDrop);
+        }
     });
+}
+
+function handleDragStart(e) {
+    draggedProject = this;
+    draggedProjectId = this.dataset.id;
+
+    // Set drag data
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', this.dataset.id);
+
+    // Add visual feedback after a tiny delay
+    setTimeout(() => {
+        this.classList.add('dragging');
+        projectsList.classList.add('dragging-active');
+    }, 0);
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    projectsList.classList.remove('dragging-active');
+
+    // Remove drag-over from all cards
+    projectsList.querySelectorAll('.project-card').forEach(card => {
+        card.classList.remove('drag-over');
+    });
+
+    draggedProject = null;
+    draggedProjectId = null;
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    if (this.dataset.id !== draggedProjectId) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    // Only remove if actually leaving the card (not entering a child)
+    const rect = this.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+        this.classList.remove('drag-over');
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    this.classList.remove('drag-over');
+
+    if (!draggedProjectId || this.dataset.id === draggedProjectId) return;
+
+    const draggedId = parseInt(draggedProjectId);
+    const targetId = parseInt(this.dataset.id);
+
+    const draggedProjectData = projects.find(p => p.id === draggedId);
+    const targetProjectData = projects.find(p => p.id === targetId);
+
+    if (!draggedProjectData || !targetProjectData) return;
+
+    // Only allow reordering within same pinned section
+    if ((draggedProjectData.pinned || false) !== (targetProjectData.pinned || false)) {
+        return;
+    }
+
+    // Get all active projects in the same section
+    const isPinned = draggedProjectData.pinned || false;
+    const sectionProjects = projects.filter(p =>
+        (!p.status || p.status === 'active') && (p.pinned || false) === isPinned
+    );
+    const sorted = sortActiveProjects(sectionProjects);
+
+    // Find positions
+    const draggedIndex = sorted.findIndex(p => p.id === draggedId);
+    const targetIndex = sorted.findIndex(p => p.id === targetId);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    // Reorder
+    sorted.splice(draggedIndex, 1);
+    sorted.splice(targetIndex, 0, draggedProjectData);
+
+    // Update order values
+    sorted.forEach((project, index) => {
+        const projectIndex = projects.findIndex(p => p.id === project.id);
+        if (projectIndex !== -1) {
+            projects[projectIndex].order = index;
+            projects[projectIndex].modifiedAt = new Date().toISOString();
+        }
+    });
+
+    saveProjects();
+    renderProjects();
 }
 
 // Open project panel
@@ -1920,6 +2151,7 @@ btnShareProject.addEventListener('click', () => {
         project: {
             name: project.name,
             color: project.color || 'teal',
+            pinned: project.pinned || false,
             tasks: project.tasks || [],
             links: project.links || [],
             notes: project.notes || '',
@@ -2039,10 +2271,17 @@ importFile.addEventListener('change', (e) => {
 
 // Import single project (from Share)
 function importSingleProject(projectData) {
+    // Calculate order for imported project
+    const isPinned = projectData.pinned || false;
+    const sameSection = projects.filter(p => (!p.status || p.status === 'active') && p.pinned === isPinned);
+    const maxOrder = sameSection.reduce((max, p) => Math.max(max, p.order || 0), 0);
+
     const newProject = {
         id: Date.now(),
         name: projectData.name,
         color: projectData.color || 'teal',
+        pinned: isPinned,
+        order: maxOrder + 1,
         status: 'active',
         tasks: projectData.tasks || [],
         links: projectData.links || [],
