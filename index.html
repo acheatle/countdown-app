@@ -43,7 +43,7 @@
                     <span class="data-divider">|</span>
                     <button class="data-btn" id="btn-import">Import</button>
                     <span class="data-divider">|</span>
-                    <button class="data-btn" id="btn-export-time">Time Log</button>
+                    <button class="data-btn" id="btn-weekly-update">Weekly Update</button>
                     <span class="data-divider">|</span>
                     <button class="data-btn" id="btn-about">About</button>
                     <input type="file" id="import-file" accept=".json" hidden>
@@ -219,26 +219,6 @@
         </div>
     </div>
 
-    <!-- Time Log Export Modal -->
-    <div class="modal" id="time-export-modal">
-        <div class="modal-content modal-content-small">
-            <h2 class="modal-title">Export Time Log</h2>
-            <div class="time-export-form">
-                <div class="time-export-field">
-                    <label>Start Date</label>
-                    <input type="date" id="time-export-start">
-                </div>
-                <div class="time-export-field">
-                    <label>End Date</label>
-                    <input type="date" id="time-export-end">
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-yes" id="btn-time-export-confirm">Export CSV</button>
-                <button class="btn btn-no" id="btn-time-export-cancel">Cancel</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Delete Confirmation Modal -->
     <div class="modal" id="delete-modal">
@@ -422,10 +402,7 @@
                         <button type="button" class="btn-time-cancel" id="btn-time-cancel">Cancel</button>
                     </div>
                 </div>
-                <div class="time-log-buttons">
-                    <button class="btn-add-time" id="btn-add-time">+ Log Time</button>
-                    <button class="btn-export-time-log" id="btn-export-time-panel">Export CSV</button>
-                </div>
+                <button class="btn-add-time" id="btn-add-time">+ Log Time</button>
             </div>
 
             <!-- Notes Section -->

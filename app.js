@@ -1377,14 +1377,8 @@ const timeLogNoteInput = document.getElementById('time-log-note');
 const btnTimeSave = document.getElementById('btn-time-save');
 const btnTimeCancel = document.getElementById('btn-time-cancel');
 
-// Time Export Elements
-const btnExportTime = document.getElementById('btn-export-time'); // Header button
-const btnExportTimePanel = document.getElementById('btn-export-time-panel'); // Panel button
-const timeExportModal = document.getElementById('time-export-modal');
-const timeExportStart = document.getElementById('time-export-start');
-const timeExportEnd = document.getElementById('time-export-end');
-const btnTimeExportConfirm = document.getElementById('btn-time-export-confirm');
-const btnTimeExportCancel = document.getElementById('btn-time-export-cancel');
+// Weekly Update Element
+const btnWeeklyUpdate = document.getElementById('btn-weekly-update');
 
 // Task Elements
 const projectTaskList = document.getElementById('project-task-list');
@@ -2367,12 +2361,7 @@ timeLogHoursInput.addEventListener('keydown', (e) => {
     }
 });
 
-// Export time log button
-// Open time export modal function
-// Track export mode: 'all' for all projects, 'single' for current project only
-let timeExportMode = 'all';
-
-// Get all time entries across all projects
+// Get all time entries across all projects (for internal use)
 function getAllTimeEntries() {
     const allEntries = [];
     projects.forEach(project => {
@@ -2388,166 +2377,90 @@ function getAllTimeEntries() {
     return allEntries;
 }
 
-// Open time export modal for all projects (header button)
-function openTimeExportModalAll() {
-    const allEntries = getAllTimeEntries();
+// Generate Weekly Status Report
+function generateWeeklyUpdate() {
+    const activeProjects = projects.filter(p => !p.status || p.status === 'active');
 
-    if (allEntries.length === 0) {
-        alert('No time entries to export. Log time in a project first.');
+    if (activeProjects.length === 0) {
+        alert('No active projects to include in the weekly update.');
         return;
     }
 
-    timeExportMode = 'all';
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Set default date range (all entries across all projects)
-    const dates = allEntries.map(e => new Date(e.date));
-    const minDate = new Date(Math.min(...dates));
-    const maxDate = new Date(Math.max(...dates));
+    // Format date for header
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-    timeExportStart.value = minDate.toISOString().split('T')[0];
-    timeExportEnd.value = maxDate.toISOString().split('T')[0];
+    let report = `WEEKLY UPDATE - ${dateStr}\n\n`;
 
-    timeExportModal.classList.add('active');
-}
+    // Sort projects: pinned first, then by order
+    const sortedProjects = [...activeProjects].sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return (a.order || 0) - (b.order || 0);
+    });
 
-// Open time export modal for single project (panel button)
-function openTimeExportModalSingle() {
-    if (!currentPanelProject) {
-        alert('Please open a project to export its time log.');
-        return;
-    }
+    sortedProjects.forEach(project => {
+        report += `## ${project.name}\n`;
 
-    const project = projects.find(p => p.id === currentPanelProject.id);
-    if (!project || !project.timeLog || project.timeLog.length === 0) {
-        alert('No time entries to export for this project.');
-        return;
-    }
+        // Status
+        if (project.statusText) {
+            report += `Status: ${project.statusText}\n`;
+        }
 
-    timeExportMode = 'single';
+        // Incomplete tasks
+        const incompleteTasks = (project.tasks || []).filter(t => !t.completed);
+        if (incompleteTasks.length > 0) {
+            report += `Tasks:\n`;
+            incompleteTasks.forEach(task => {
+                report += `- [ ] ${task.text}\n`;
+            });
+        }
 
-    // Set default date range (entries for this project)
-    const entries = project.timeLog;
-    const dates = entries.map(e => new Date(e.date));
-    const minDate = new Date(Math.min(...dates));
-    const maxDate = new Date(Math.max(...dates));
-
-    timeExportStart.value = minDate.toISOString().split('T')[0];
-    timeExportEnd.value = maxDate.toISOString().split('T')[0];
-
-    timeExportModal.classList.add('active');
-}
-
-// Header Time Log button - exports all projects
-btnExportTime.addEventListener('click', () => {
-    if (isDemoMode) {
-        alert('Export is not available in demo mode.');
-        return;
-    }
-    openTimeExportModalAll();
-});
-
-// Panel Export CSV button - exports current project only
-btnExportTimePanel.addEventListener('click', () => {
-    if (isDemoMode) {
-        alert('Export is not available in demo mode.');
-        return;
-    }
-    openTimeExportModalSingle();
-});
-
-// Cancel time export
-btnTimeExportCancel.addEventListener('click', () => {
-    timeExportModal.classList.remove('active');
-});
-
-// Close modal on overlay click
-timeExportModal.addEventListener('click', (e) => {
-    if (e.target === timeExportModal) {
-        timeExportModal.classList.remove('active');
-    }
-});
-
-// Confirm time export
-btnTimeExportConfirm.addEventListener('click', () => {
-    const startDate = new Date(timeExportStart.value);
-    const endDate = new Date(timeExportEnd.value);
-    endDate.setHours(23, 59, 59, 999); // Include full end day
-
-    let entriesToExport = [];
-    let filename = '';
-
-    if (timeExportMode === 'all') {
-        // Export all projects
-        const allEntries = getAllTimeEntries();
-        entriesToExport = allEntries.filter(entry => {
+        // Time logged in past 7 days
+        const recentTimeEntries = (project.timeLog || []).filter(entry => {
             const entryDate = new Date(entry.date);
-            return entryDate >= startDate && entryDate <= endDate;
+            return entryDate >= sevenDaysAgo;
         });
-        filename = `time-log-all-projects`;
-    } else {
-        // Export single project
-        if (!currentPanelProject) return;
 
-        const project = projects.find(p => p.id === currentPanelProject.id);
-        if (!project || !project.timeLog) return;
+        if (recentTimeEntries.length > 0) {
+            const totalHours = recentTimeEntries.reduce((sum, e) => sum + e.hours, 0);
+            report += `Time this week: ${totalHours} hour${totalHours !== 1 ? 's' : ''}\n`;
+        }
 
-        entriesToExport = project.timeLog
-            .filter(entry => {
-                const entryDate = new Date(entry.date);
-                return entryDate >= startDate && entryDate <= endDate;
-            })
-            .map(entry => ({
-                ...entry,
-                projectName: project.name
-            }));
+        // Notes (truncated if long)
+        if (project.notes && project.notes.trim()) {
+            const truncatedNotes = project.notes.length > 200
+                ? project.notes.substring(0, 200) + '...'
+                : project.notes;
+            report += `Notes: ${truncatedNotes}\n`;
+        }
 
-        const sanitizedName = project.name
-            .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .substring(0, 30);
-        filename = `time-log-${sanitizedName}`;
-    }
-
-    if (entriesToExport.length === 0) {
-        alert('No entries in the selected date range.');
-        return;
-    }
-
-    // Sort by date, then by project name
-    entriesToExport.sort((a, b) => {
-        const dateCompare = new Date(a.date) - new Date(b.date);
-        if (dateCompare !== 0) return dateCompare;
-        return a.projectName.localeCompare(b.projectName);
+        report += '\n';
     });
 
-    // Generate CSV
-    const csvRows = ['Project,Date,Hours,Notes'];
-    entriesToExport.forEach(entry => {
-        const date = new Date(entry.date).toISOString().split('T')[0];
-        const note = entry.note ? `"${entry.note.replace(/"/g, '""')}"` : '';
-        csvRows.push(`"${entry.projectName.replace(/"/g, '""')}",${date},${entry.hours},${note}`);
-    });
-
-    // Add total row
-    const totalHours = entriesToExport.reduce((sum, e) => sum + e.hours, 0);
-    csvRows.push(`"TOTAL",,${totalHours.toFixed(2)},`);
-
-    const csv = csvRows.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    // Download as markdown file
+    const blob = new Blob([report], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
 
-    const dateRange = `${timeExportStart.value}_${timeExportEnd.value}`;
-
+    const fileDate = now.toISOString().split('T')[0];
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${filename}-${dateRange}.csv`;
+    a.download = `weekly-update-${fileDate}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
 
-    timeExportModal.classList.remove('active');
+// Weekly Update button
+btnWeeklyUpdate.addEventListener('click', () => {
+    if (isDemoMode) {
+        alert('Export is not available in demo mode.');
+        return;
+    }
+    generateWeeklyUpdate();
 });
 
 // Update openProjectPanel to render time log

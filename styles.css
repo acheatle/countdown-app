@@ -1929,59 +1929,6 @@ body::before {
     display: none;
 }
 
-.time-log-buttons {
-    display: flex;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-xs);
-}
-
-.btn-export-time-log {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-family: var(--font-primary);
-    font-size: 13px;
-    color: var(--charcoal);
-    background: none;
-    border: 1px solid var(--charcoal);
-    border-radius: 8px;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-}
-
-.btn-export-time-log:hover {
-    opacity: 1;
-}
-
-/* Time Export Modal */
-.time-export-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-}
-
-.time-export-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.time-export-field label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    opacity: 0.6;
-}
-
-.time-export-field input {
-    font-family: inherit;
-    font-size: 16px;
-    padding: var(--spacing-sm);
-    border: 1px solid var(--charcoal);
-    border-radius: 8px;
-    background: transparent;
-}
-
 /* About Panel */
 .about-overlay {
     position: fixed;
