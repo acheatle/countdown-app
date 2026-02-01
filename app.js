@@ -255,21 +255,24 @@ function createCountdownCard(countdown, isArchived = false, isCanceled = false, 
 
     if (isCanceled) {
         card.classList.add('canceled');
-        const target = new Date(countdown.targetDate);
-        const dateStr = target.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const canceledDate = countdown.canceledAt ? new Date(countdown.canceledAt) : new Date(countdown.targetDate);
+        const dateStr = canceledDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         card.innerHTML = `
             <div class="countdown-color-block">
-                <span class="countdown-number">—</span>
+                <span class="countdown-status-icon">✕</span>
             </div>
             <div class="countdown-info">
+                <span class="countdown-status-icon-inline">✕</span>
                 <div class="countdown-name">${countdown.name}</div>
-                <div class="countdown-date">${dateStr}</div>
+                <div class="countdown-date">Canceled: ${dateStr}</div>
             </div>
             <div class="countdown-actions">
                 <button class="btn-delete" data-id="${countdown.id}">Delete</button>
             </div>
             <div class="grid-content">
-                <span class="grid-number">—</span>
+                <span class="countdown-status-icon-grid">✕</span>
+                <span class="grid-name">${countdown.name}</span>
+                <span class="grid-date">Canceled: ${dateStr}</span>
             </div>
         `;
         return card;
@@ -277,21 +280,24 @@ function createCountdownCard(countdown, isArchived = false, isCanceled = false, 
 
     if (isArchived) {
         card.classList.add('archived');
-        const target = new Date(countdown.targetDate);
-        const dateStr = target.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const completedDate = countdown.archivedAt ? new Date(countdown.archivedAt) : new Date(countdown.targetDate);
+        const dateStr = completedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         card.innerHTML = `
             <div class="countdown-color-block">
-                <span class="countdown-number">✓</span>
+                <span class="countdown-status-icon">✓</span>
             </div>
             <div class="countdown-info">
+                <span class="countdown-status-icon-inline">✓</span>
                 <div class="countdown-name">${countdown.name}</div>
-                <div class="countdown-date">Completed ${dateStr}</div>
+                <div class="countdown-date">Completed: ${dateStr}</div>
             </div>
             <div class="countdown-actions">
                 <button class="btn-delete" data-id="${countdown.id}">Delete</button>
             </div>
             <div class="grid-content">
-                <span class="grid-number">✓</span>
+                <span class="countdown-status-icon-grid">✓</span>
+                <span class="grid-name">${countdown.name}</span>
+                <span class="grid-date">Completed: ${dateStr}</span>
             </div>
         `;
         return card;
@@ -424,6 +430,7 @@ document.getElementById('btn-yes').addEventListener('click', () => {
         const index = countdowns.findIndex(c => c.id === currentModalCountdown.id);
         if (index !== -1) {
             countdowns[index].status = 'archived';
+            countdowns[index].archivedAt = new Date().toISOString();
             saveCountdowns();
             renderCountdowns();
 
@@ -458,6 +465,7 @@ document.getElementById('btn-cancel-countdown').addEventListener('click', () => 
         const index = countdowns.findIndex(c => c.id === currentModalCountdown.id);
         if (index !== -1) {
             countdowns[index].status = 'canceled';
+            countdowns[index].canceledAt = new Date().toISOString();
             saveCountdowns();
             renderCountdowns();
         }
