@@ -1204,6 +1204,7 @@ body::before {
     width: 100%;
     padding: var(--spacing-sm);
     border: 1px solid var(--charcoal);
+    border-radius: 8px;
     background: transparent;
     color: var(--charcoal);
 }
@@ -1225,6 +1226,7 @@ body::before {
     font-size: 12px;
     padding: var(--spacing-xs) var(--spacing-sm);
     border: none;
+    border-radius: 8px;
     cursor: pointer;
 }
 
@@ -1510,6 +1512,52 @@ body::before {
     opacity: 0.5;
     font-style: italic;
     padding: 4px 0;
+}
+
+/* Status Field */
+.status-field {
+    position: relative;
+    min-height: 32px;
+}
+
+.status-text {
+    display: block;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 6px 0;
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+}
+
+.status-text:hover {
+    border-bottom-color: rgba(26, 26, 26, 0.2);
+}
+
+.status-text.empty {
+    color: var(--charcoal);
+    opacity: 0.4;
+    font-style: italic;
+}
+
+.status-input {
+    font-family: inherit;
+    font-size: 14px;
+    width: 100%;
+    padding: 6px var(--spacing-sm);
+    border: 1px solid var(--charcoal);
+    border-radius: 8px;
+    background: white;
+    color: var(--charcoal);
+}
+
+.status-input:focus {
+    outline: none;
+    border-color: var(--teal-blue);
+}
+
+.status-input.hidden {
+    display: none;
 }
 
 /* Notes */

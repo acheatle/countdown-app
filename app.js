@@ -1145,8 +1145,22 @@ const btnTimeExportCancel = document.getElementById('btn-time-export-cancel');
 const projectTaskList = document.getElementById('project-task-list');
 const btnAddTask = document.getElementById('btn-add-task');
 
+// Project Edit Elements
+const btnEditProject = document.getElementById('btn-edit-project');
+const projectEditForm = document.getElementById('project-edit-form');
+const projectEditNameInput = document.getElementById('project-edit-name');
+const projectEditColorPicker = document.getElementById('project-edit-color-picker');
+const projectBtnEditSave = document.getElementById('project-btn-edit-save');
+const projectBtnEditCancel = document.getElementById('project-btn-edit-cancel');
+
+// Status Field Elements
+const projectStatusText = document.getElementById('project-status-text');
+const projectStatusInput = document.getElementById('project-status-input');
+
 let currentPanelProject = null;
 let projectNotesTimeout = null;
+let isProjectEditMode = false;
+let editProjectColor = 'teal';
 
 // Save projects to localStorage
 function saveProjects() {
@@ -1496,16 +1510,22 @@ function openProjectPanel(projectId) {
     projectAddLinkForm.classList.add('hidden');
     projectBtnAddLink.classList.remove('hidden');
 
-    // Set up panel color picker
+    // Set up panel color picker (legacy - now hidden, use edit mode instead)
     const currentColor = project.color || 'teal';
     projectPanelColorPicker.querySelectorAll('.color-swatch').forEach(swatch => {
         swatch.classList.toggle('selected', swatch.dataset.color === currentColor);
     });
 
-    // Show/hide status actions and color picker based on project status
+    // Show/hide status actions based on project status
     const isActive = !project.status || project.status === 'active';
     projectStatusActions.classList.toggle('hidden', !isActive);
-    projectPanelColorPicker.classList.toggle('hidden', !isActive);
+    btnEditProject.classList.toggle('hidden', !isActive);
+
+    // Render status field
+    renderProjectStatus();
+
+    // Reset edit mode
+    closeProjectEditMode();
 
     projectDetailPanel.classList.add('active');
     projectPanelOverlay.classList.add('active');
@@ -1516,10 +1536,159 @@ function closeProjectPanel() {
     projectDetailPanel.classList.remove('active');
     projectPanelOverlay.classList.remove('active');
     currentPanelProject = null;
+    closeProjectEditMode();
 }
 
 projectPanelClose.addEventListener('click', closeProjectPanel);
 projectPanelOverlay.addEventListener('click', closeProjectPanel);
+
+// Project Edit Mode Functions
+function openProjectEditMode() {
+    if (!currentPanelProject) return;
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project) return;
+
+    // Populate edit fields
+    projectEditNameInput.value = project.name;
+    editProjectColor = project.color || 'teal';
+
+    // Set up edit color picker
+    projectEditColorPicker.querySelectorAll('.color-swatch').forEach(swatch => {
+        swatch.classList.toggle('selected', swatch.dataset.color === editProjectColor);
+    });
+
+    // Show edit form, hide display
+    projectEditForm.classList.remove('hidden');
+    projectPanelTitle.classList.add('hidden');
+    btnEditProject.classList.add('hidden');
+    projectStatusActions.classList.add('hidden');
+
+    isProjectEditMode = true;
+}
+
+function closeProjectEditMode() {
+    projectEditForm.classList.add('hidden');
+    projectPanelTitle.classList.remove('hidden');
+
+    // Only show edit button and status actions if project is active
+    if (currentPanelProject) {
+        const project = projects.find(p => p.id === currentPanelProject.id);
+        const isActive = project && (!project.status || project.status === 'active');
+        btnEditProject.classList.toggle('hidden', !isActive);
+        projectStatusActions.classList.toggle('hidden', !isActive);
+    } else {
+        btnEditProject.classList.remove('hidden');
+    }
+
+    isProjectEditMode = false;
+}
+
+function saveProjectEdit() {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1) return;
+
+    const newName = projectEditNameInput.value.trim();
+    if (!newName) return;
+
+    // Update project
+    projects[index].name = newName;
+    projects[index].color = editProjectColor;
+    projects[index].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+    renderProjects();
+
+    // Update panel display
+    projectPanelTitle.textContent = newName;
+
+    closeProjectEditMode();
+}
+
+// Edit button click
+btnEditProject.addEventListener('click', openProjectEditMode);
+
+// Edit save
+projectBtnEditSave.addEventListener('click', saveProjectEdit);
+
+// Edit cancel
+projectBtnEditCancel.addEventListener('click', closeProjectEditMode);
+
+// Edit color picker
+projectEditColorPicker.querySelectorAll('.color-swatch').forEach(swatch => {
+    swatch.addEventListener('click', () => {
+        editProjectColor = swatch.dataset.color;
+        projectEditColorPicker.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+    });
+});
+
+// Status Field Functions
+function renderProjectStatus() {
+    if (!currentPanelProject) return;
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project) return;
+
+    const statusValue = project.statusText || '';
+
+    if (statusValue) {
+        projectStatusText.textContent = statusValue;
+        projectStatusText.classList.remove('empty');
+    } else {
+        projectStatusText.textContent = 'Current status or what you\'re waiting on...';
+        projectStatusText.classList.add('empty');
+    }
+
+    // Reset to display mode
+    projectStatusText.style.display = 'block';
+    projectStatusInput.classList.add('hidden');
+    projectStatusInput.value = statusValue;
+}
+
+function enterStatusEditMode() {
+    if (!currentPanelProject) return;
+
+    const project = projects.find(p => p.id === currentPanelProject.id);
+    if (!project) return;
+
+    projectStatusInput.value = project.statusText || '';
+    projectStatusText.style.display = 'none';
+    projectStatusInput.classList.remove('hidden');
+    projectStatusInput.focus();
+}
+
+function saveProjectStatus() {
+    if (!currentPanelProject) return;
+
+    const index = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (index === -1) return;
+
+    const newStatus = projectStatusInput.value.trim();
+    projects[index].statusText = newStatus;
+    projects[index].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+    renderProjectStatus();
+}
+
+// Status text click to edit
+projectStatusText.addEventListener('click', enterStatusEditMode);
+
+// Status input blur to save
+projectStatusInput.addEventListener('blur', saveProjectStatus);
+
+// Status input enter to save
+projectStatusInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        projectStatusInput.blur();
+    } else if (e.key === 'Escape') {
+        renderProjectStatus(); // Cancel and revert
+    }
+});
 
 // Panel color picker - change project color
 projectPanelColorPicker.querySelectorAll('.color-swatch').forEach(swatch => {

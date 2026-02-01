@@ -314,8 +314,31 @@
             <div class="panel-header panel-header-project">
                 <div class="panel-header-top">
                     <h2 class="panel-title" id="project-panel-title"></h2>
+                    <button class="btn-edit" id="btn-edit-project">Edit</button>
                 </div>
-                <div class="panel-color-picker" id="project-panel-color-picker">
+
+                <!-- Edit Form (hidden by default) -->
+                <div class="panel-edit-form hidden" id="project-edit-form">
+                    <div class="edit-field">
+                        <label for="project-edit-name">Project Name</label>
+                        <input type="text" id="project-edit-name" class="edit-input">
+                    </div>
+                    <div class="edit-field">
+                        <label>Color</label>
+                        <div class="color-picker" id="project-edit-color-picker">
+                            <button type="button" class="color-swatch" data-color="teal" style="background-color: var(--teal-blue)"></button>
+                            <button type="button" class="color-swatch" data-color="coral" style="background-color: var(--coral-red)"></button>
+                            <button type="button" class="color-swatch" data-color="mustard" style="background-color: var(--mustard)"></button>
+                            <button type="button" class="color-swatch" data-color="plum" style="background-color: var(--plum)"></button>
+                        </div>
+                    </div>
+                    <div class="edit-actions">
+                        <button type="button" class="btn-edit-save" id="project-btn-edit-save">Save</button>
+                        <button type="button" class="btn-edit-cancel" id="project-btn-edit-cancel">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="panel-color-picker hidden" id="project-panel-color-picker">
                     <label class="panel-label panel-label-inline">Color</label>
                     <div class="color-picker">
                         <button type="button" class="color-swatch" data-color="teal" style="background-color: var(--teal-blue)"></button>
@@ -330,6 +353,15 @@
                 </div>
                 <div class="panel-share-action">
                     <button class="btn-share" id="btn-share-project">Share</button>
+                </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="panel-section">
+                <label class="panel-label">Status</label>
+                <div class="status-field" id="project-status-field">
+                    <span class="status-text" id="project-status-text"></span>
+                    <input type="text" class="status-input hidden" id="project-status-input" placeholder="Current status or what you're waiting on...">
                 </div>
             </div>
 
