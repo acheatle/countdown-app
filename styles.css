@@ -428,11 +428,17 @@ body::before {
     border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
-    transition: box-shadow 0.2s;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .countdown-card:hover {
     box-shadow: 0 2px 8px rgba(26, 26, 26, 0.1);
+}
+
+/* Active card hover lift effect */
+.countdown-card:not(.archived):not(.canceled):hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(26, 26, 26, 0.12);
 }
 
 .countdown-card.color-teal .countdown-color-block {
@@ -698,11 +704,17 @@ body::before {
     border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
-    transition: box-shadow 0.2s;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .project-card:hover {
     box-shadow: 0 2px 8px rgba(26, 26, 26, 0.1);
+}
+
+/* Active card hover lift effect */
+.project-card:not(.archived):not(.canceled):hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(26, 26, 26, 0.12);
 }
 
 .project-card.color-teal .project-color-block {
