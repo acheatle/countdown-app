@@ -138,6 +138,28 @@ const extendDaysInput = document.getElementById('extend-days');
 const navButtons = document.querySelectorAll('.nav-btn');
 const pages = document.querySelectorAll('.page');
 
+// Add Item Form Elements
+const btnShowCountdownForm = document.getElementById('btn-show-countdown-form');
+const addCountdownForm = document.getElementById('add-countdown-form');
+const btnCancelCountdownForm = document.getElementById('btn-cancel-countdown-form');
+
+// Show/Hide Countdown Form
+function showCountdownForm() {
+    btnShowCountdownForm.classList.add('hidden');
+    addCountdownForm.classList.remove('hidden');
+    nameInput.focus();
+}
+
+function hideCountdownForm() {
+    addCountdownForm.classList.add('hidden');
+    btnShowCountdownForm.classList.remove('hidden');
+    form.reset();
+    dateInput.min = new Date().toISOString().split('T')[0];
+}
+
+btnShowCountdownForm.addEventListener('click', showCountdownForm);
+btnCancelCountdownForm.addEventListener('click', hideCountdownForm);
+
 // Set minimum date to today
 dateInput.min = new Date().toISOString().split('T')[0];
 
@@ -177,8 +199,7 @@ form.addEventListener('submit', (e) => {
     saveCountdowns();
     renderCountdowns();
 
-    form.reset();
-    dateInput.min = new Date().toISOString().split('T')[0];
+    hideCountdownForm();
 });
 
 // Save to localStorage
@@ -1097,8 +1118,32 @@ const emptyProjects = document.getElementById('empty-projects');
 const emptyProjectsArchive = document.getElementById('empty-projects-archive');
 const emptyProjectsCanceled = document.getElementById('empty-projects-canceled');
 
+// Add Project Form Elements
+const btnShowProjectForm = document.getElementById('btn-show-project-form');
+const addProjectFormContainer = document.getElementById('add-project-form');
+const btnCancelProjectForm = document.getElementById('btn-cancel-project-form');
+
 // Track selected color for new projects
 let selectedProjectColor = 'teal';
+
+// Show/Hide Project Form
+function showProjectForm() {
+    btnShowProjectForm.classList.add('hidden');
+    addProjectFormContainer.classList.remove('hidden');
+    projectNameInput.focus();
+}
+
+function hideProjectForm() {
+    addProjectFormContainer.classList.add('hidden');
+    btnShowProjectForm.classList.remove('hidden');
+    projectForm.reset();
+    selectedProjectColor = 'teal';
+    projectColorPicker.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    projectColorPicker.querySelector('[data-color="teal"]').classList.add('selected');
+}
+
+btnShowProjectForm.addEventListener('click', showProjectForm);
+btnCancelProjectForm.addEventListener('click', hideProjectForm);
 
 // Color picker for new project form
 projectColorPicker.querySelectorAll('.color-swatch').forEach(swatch => {
@@ -1201,12 +1246,7 @@ projectForm.addEventListener('submit', (e) => {
     projects.push(project);
     saveProjects();
     renderProjects();
-    projectForm.reset();
-
-    // Reset color picker to default (teal)
-    selectedProjectColor = 'teal';
-    projectColorPicker.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-    projectColorPicker.querySelector('[data-color="teal"]').classList.add('selected');
+    hideProjectForm();
 });
 
 // Get color class from project color value
