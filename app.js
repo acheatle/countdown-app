@@ -50,7 +50,7 @@ const countdownsNav = document.getElementById('countdowns-nav');
 
 // View Switcher Elements
 const viewButtons = document.querySelectorAll('.view-btn');
-let currentView = 'list';
+let currentView = 'grid';
 
 // Projects Nav
 const projectsNav = document.getElementById('projects-nav');
@@ -117,6 +117,20 @@ viewButtons.forEach(btn => {
         renderProjects();
     });
 });
+
+// Initialize default view (Grid)
+function initializeDefaultView() {
+    const lists = document.querySelectorAll('.countdowns-list, .projects-list');
+    lists.forEach(list => {
+        list.classList.add('grid-view');
+    });
+
+    const addProject = document.querySelector('.add-project');
+    if (addProject) {
+        addProject.classList.add('align-grid');
+    }
+}
+initializeDefaultView();
 
 // DOM Elements
 const form = document.getElementById('countdown-form');

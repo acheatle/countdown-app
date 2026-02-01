@@ -22,12 +22,12 @@
         <header class="header">
             <div class="header-left">
                 <div class="tab-switcher">
-                    <button class="tab-btn active" data-tab="countdowns">Countdowns</button>
-                    <button class="tab-btn" data-tab="projects">Projects</button>
+                    <button class="tab-btn" data-tab="countdowns">Countdowns</button>
+                    <button class="tab-btn active" data-tab="projects">Projects</button>
                 </div>
                 <div class="view-switcher">
-                    <button class="view-btn active" data-view="list">List</button>
-                    <button class="view-btn" data-view="grid">Grid</button>
+                    <button class="view-btn" data-view="list">List</button>
+                    <button class="view-btn active" data-view="grid">Grid</button>
                 </div>
             </div>
             <div class="header-right">
@@ -41,12 +41,12 @@
                     <button class="data-btn" id="btn-about">About</button>
                     <input type="file" id="import-file" accept=".json" hidden>
                 </div>
-                <nav class="nav" id="countdowns-nav">
+                <nav class="nav" id="countdowns-nav" style="display: none;">
                     <button class="nav-btn active" data-page="active">Active</button>
                     <button class="nav-btn" data-page="archive">Archive</button>
                     <button class="nav-btn" data-page="canceled">Canceled</button>
                 </nav>
-                <nav class="nav" id="projects-nav" style="display: none;">
+                <nav class="nav" id="projects-nav">
                     <button class="nav-btn active" data-page="projects-active">Active</button>
                     <button class="nav-btn" data-page="projects-archive">Archive</button>
                     <button class="nav-btn" data-page="projects-canceled">Canceled</button>
@@ -55,7 +55,7 @@
         </header>
 
         <!-- Countdowns View -->
-        <main class="main tab-content active" id="tab-countdowns">
+        <main class="main tab-content" id="tab-countdowns">
             <!-- Active Page -->
             <section class="page active" id="page-active">
                 <div class="add-item-container">
@@ -125,7 +125,7 @@
         </main>
 
         <!-- Projects View -->
-        <main class="main tab-content" id="tab-projects">
+        <main class="main tab-content active" id="tab-projects">
             <!-- Active Projects Page -->
             <section class="page active" id="page-projects-active">
                 <div class="add-item-container">
