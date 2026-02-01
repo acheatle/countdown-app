@@ -1,8 +1,168 @@
-// State
-let countdowns = JSON.parse(localStorage.getItem('countdowns')) || [];
-let projects = JSON.parse(localStorage.getItem('projects')) || [];
+// Demo Mode Detection
+const isDemoMode = new URLSearchParams(window.location.search).get('demo') === 'true';
+
+// Generate demo data
+function generateDemoData() {
+    const now = new Date();
+
+    // Demo countdowns
+    const demoCountdowns = [
+        {
+            id: 1001,
+            name: 'Product Launch',
+            targetDate: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days
+            status: 'active',
+            notes: 'Final preparations for the big launch day.',
+            links: [{ label: 'Launch Plan', url: 'https://example.com/launch' }],
+            createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 1002,
+            name: 'Team Presentation',
+            targetDate: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days
+            status: 'active',
+            notes: 'Quarterly review presentation to stakeholders.',
+            links: [],
+            createdAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 1003,
+            name: 'Client Deadline',
+            targetDate: new Date(now.getTime() + 28 * 60 * 60 * 1000).toISOString(), // 28 hours
+            status: 'active',
+            notes: 'Deliver final mockups to client.',
+            links: [{ label: 'Project Brief', url: 'https://example.com/brief' }],
+            createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 1004,
+            name: 'Conference Talk',
+            targetDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Past
+            status: 'archived',
+            archivedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+            notes: 'Talk went great! Good audience engagement.',
+            links: [],
+            createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 1005,
+            name: 'Workshop Prep',
+            targetDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(), // Past
+            status: 'archived',
+            archivedAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+            notes: '',
+            links: [],
+            createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 1006,
+            name: 'Trade Show Booth',
+            targetDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // Past
+            status: 'canceled',
+            canceledAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            notes: 'Event was postponed indefinitely.',
+            links: [],
+            createdAt: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString()
+        }
+    ];
+
+    // Demo projects
+    const demoProjects = [
+        {
+            id: 2001,
+            name: 'Website Redesign',
+            color: 'teal',
+            status: 'active',
+            pinned: true,
+            order: 1,
+            statusText: 'Waiting on client feedback for homepage',
+            tasks: [
+                { id: 't1', text: 'Create wireframes', completed: true },
+                { id: 't2', text: 'Design homepage mockup', completed: true },
+                { id: 't3', text: 'Build responsive nav', completed: false },
+                { id: 't4', text: 'Implement dark mode', completed: false }
+            ],
+            links: [
+                { label: 'Figma Designs', url: 'https://figma.com/example' },
+                { label: 'Brand Guidelines', url: 'https://example.com/brand' }
+            ],
+            timeLog: [
+                { date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], hours: 4, note: 'Homepage layout' },
+                { date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], hours: 3, note: 'Wireframes' },
+                { date: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], hours: 2.5, note: 'Initial research' }
+            ],
+            notes: 'Client prefers minimal design. Focus on typography and whitespace.',
+            createdAt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 2002,
+            name: 'Q1 Planning',
+            color: 'coral',
+            status: 'active',
+            pinned: false,
+            order: 2,
+            statusText: '',
+            tasks: [
+                { id: 't5', text: 'Review last quarter metrics', completed: true },
+                { id: 't6', text: 'Set team OKRs', completed: false }
+            ],
+            links: [{ label: 'Planning Doc', url: 'https://docs.example.com/q1' }],
+            timeLog: [
+                { date: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], hours: 2, note: 'Strategy meeting' }
+            ],
+            notes: '',
+            createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 2003,
+            name: 'Mobile App MVP',
+            color: 'mustard',
+            status: 'active',
+            pinned: false,
+            order: 3,
+            statusText: 'Blocked on API integration',
+            tasks: [
+                { id: 't7', text: 'User authentication flow', completed: true },
+                { id: 't8', text: 'Dashboard UI', completed: false },
+                { id: 't9', text: 'Push notifications', completed: false }
+            ],
+            links: [],
+            timeLog: [],
+            notes: 'Using React Native for cross-platform support.',
+            createdAt: new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+            id: 2004,
+            name: 'Weekly Team Sync',
+            color: 'plum',
+            status: 'active',
+            pinned: true,
+            order: 0,
+            statusText: 'Every Monday 10am',
+            tasks: [],
+            links: [{ label: 'Meeting Notes', url: 'https://notion.example.com/sync' }],
+            timeLog: [],
+            notes: 'Standing meeting to review progress and blockers.',
+            createdAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString()
+        }
+    ];
+
+    return { countdowns: demoCountdowns, projects: demoProjects };
+}
+
+// State - use demo data if in demo mode
+let countdowns, projects;
+if (isDemoMode) {
+    const demoData = generateDemoData();
+    countdowns = demoData.countdowns;
+    projects = demoData.projects;
+} else {
+    countdowns = JSON.parse(localStorage.getItem('countdowns')) || [];
+    projects = JSON.parse(localStorage.getItem('projects')) || [];
+}
+
 let currentModalCountdown = null;
-let mustardUnlocked = localStorage.getItem('mustardUnlocked') === 'true';
+let mustardUnlocked = isDemoMode ? true : localStorage.getItem('mustardUnlocked') === 'true';
 
 // Delete confirmation modal
 const deleteModal = document.getElementById('delete-modal');
@@ -132,6 +292,23 @@ function initializeDefaultView() {
 }
 initializeDefaultView();
 
+// Initialize demo mode
+function initializeDemoMode() {
+    if (!isDemoMode) return;
+
+    const demoBanner = document.getElementById('demo-banner');
+    if (demoBanner) {
+        demoBanner.classList.remove('hidden');
+    }
+
+    // Hide backup banner in demo mode
+    const backupBanner = document.getElementById('backup-banner');
+    if (backupBanner) {
+        backupBanner.classList.add('hidden');
+    }
+}
+initializeDemoMode();
+
 // DOM Elements
 const form = document.getElementById('countdown-form');
 const dateInput = document.getElementById('countdown-date');
@@ -216,8 +393,9 @@ form.addEventListener('submit', (e) => {
     hideCountdownForm();
 });
 
-// Save to localStorage
+// Save to localStorage (skipped in demo mode)
 function saveCountdowns() {
+    if (isDemoMode) return;
     localStorage.setItem('countdowns', JSON.stringify(countdowns));
 }
 
@@ -1229,8 +1407,9 @@ let projectNotesTimeout = null;
 let isProjectEditMode = false;
 let editProjectColor = 'teal';
 
-// Save projects to localStorage
+// Save projects to localStorage (skipped in demo mode)
 function saveProjects() {
+    if (isDemoMode) return;
     localStorage.setItem('projects', JSON.stringify(projects));
 }
 
@@ -2259,10 +2438,22 @@ function openTimeExportModalSingle() {
 }
 
 // Header Time Log button - exports all projects
-btnExportTime.addEventListener('click', openTimeExportModalAll);
+btnExportTime.addEventListener('click', () => {
+    if (isDemoMode) {
+        alert('Export is not available in demo mode.');
+        return;
+    }
+    openTimeExportModalAll();
+});
 
 // Panel Export CSV button - exports current project only
-btnExportTimePanel.addEventListener('click', openTimeExportModalSingle);
+btnExportTimePanel.addEventListener('click', () => {
+    if (isDemoMode) {
+        alert('Export is not available in demo mode.');
+        return;
+    }
+    openTimeExportModalSingle();
+});
 
 // Cancel time export
 btnTimeExportCancel.addEventListener('click', () => {
@@ -2458,10 +2649,20 @@ function performExport() {
     hideBackupBanner();
 }
 
-btnExport.addEventListener('click', performExport);
+btnExport.addEventListener('click', () => {
+    if (isDemoMode) {
+        alert('Export is not available in demo mode.');
+        return;
+    }
+    performExport();
+});
 
 // Import button - trigger file picker
 btnImport.addEventListener('click', () => {
+    if (isDemoMode) {
+        alert('Import is not available in demo mode.');
+        return;
+    }
     importFile.click();
 });
 
