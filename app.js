@@ -1957,7 +1957,8 @@ function renderProjectPanelLinks() {
     }
 
     projectPanelLinks.innerHTML = project.links.map((link, index) => `
-        <div class="panel-link">
+        <div class="panel-link" data-index="${index}">
+            <span class="drag-handle" data-index="${index}">&#x2261;</span>
             <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>
             <button class="btn-delete-link" data-index="${index}">&times;</button>
         </div>
@@ -1969,6 +1970,9 @@ function renderProjectPanelLinks() {
             deleteProjectLink(index);
         });
     });
+
+    // Link drag-and-drop
+    setupPanelDragAndDrop(projectPanelLinks, '.panel-link', 'links');
 }
 
 // Add project link
@@ -2041,6 +2045,181 @@ projectLinkUrlInput.addEventListener('keydown', (e) => {
 });
 
 // ============================================
+// Panel Item Drag and Drop (Tasks & Links)
+// ============================================
+
+let panelDragState = null;
+
+function reorderPanelArray(arrayKey, fromIndex, toIndex) {
+    if (fromIndex === toIndex) return;
+    if (!currentPanelProject) return;
+
+    const projectIndex = projects.findIndex(p => p.id === currentPanelProject.id);
+    if (projectIndex === -1) return;
+
+    const arr = projects[projectIndex][arrayKey];
+    if (!arr) return;
+
+    const moved = arr.splice(fromIndex, 1)[0];
+    arr.splice(toIndex, 0, moved);
+    projects[projectIndex].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+
+    if (arrayKey === 'tasks') {
+        renderProjectTasks();
+    } else if (arrayKey === 'links') {
+        renderProjectPanelLinks();
+    }
+}
+
+function setupPanelDragAndDrop(container, itemSelector, arrayKey) {
+    const items = container.querySelectorAll(itemSelector);
+
+    items.forEach(item => {
+        const handle = item.querySelector('.drag-handle');
+        if (!handle) return;
+
+        // Enable draggable only via handle
+        handle.addEventListener('mousedown', () => {
+            item.setAttribute('draggable', 'true');
+        });
+
+        item.addEventListener('dragstart', (e) => {
+            panelDragState = {
+                arrayKey: arrayKey,
+                fromIndex: parseInt(item.dataset.index)
+            };
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', item.dataset.index);
+            setTimeout(() => item.classList.add('dragging'), 0);
+        });
+
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+            item.setAttribute('draggable', 'false');
+            container.querySelectorAll(itemSelector).forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            panelDragState = null;
+        });
+
+        item.addEventListener('dragover', (e) => {
+            if (!panelDragState || panelDragState.arrayKey !== arrayKey) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+
+        item.addEventListener('dragenter', (e) => {
+            if (!panelDragState || panelDragState.arrayKey !== arrayKey) return;
+            e.preventDefault();
+            const targetIndex = parseInt(item.dataset.index);
+            if (targetIndex !== panelDragState.fromIndex) {
+                item.classList.add('drag-over');
+            }
+        });
+
+        item.addEventListener('dragleave', (e) => {
+            const rect = item.getBoundingClientRect();
+            if (e.clientX < rect.left || e.clientX > rect.right ||
+                e.clientY < rect.top || e.clientY > rect.bottom) {
+                item.classList.remove('drag-over');
+            }
+        });
+
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            item.classList.remove('drag-over');
+
+            if (!panelDragState || panelDragState.arrayKey !== arrayKey) return;
+
+            reorderPanelArray(arrayKey, panelDragState.fromIndex, parseInt(item.dataset.index));
+        });
+
+        // Touch support on handle
+        let touchStartY = 0;
+        let touchClone = null;
+        let touchFromIndex = null;
+        let touchActive = false;
+
+        handle.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchFromIndex = parseInt(item.dataset.index);
+            touchActive = false;
+
+            item._touchTimer = setTimeout(() => {
+                touchActive = true;
+                item.classList.add('dragging');
+
+                touchClone = item.cloneNode(true);
+                const rect = item.getBoundingClientRect();
+                touchClone.style.cssText = `
+                    position: fixed;
+                    left: ${rect.left}px;
+                    top: ${e.touches[0].clientY - 20}px;
+                    width: ${rect.width}px;
+                    opacity: 0.8;
+                    z-index: 10000;
+                    pointer-events: none;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    background: var(--cream);
+                    border-radius: 4px;
+                `;
+                document.body.appendChild(touchClone);
+            }, 200);
+        }, { passive: true });
+
+        handle.addEventListener('touchmove', (e) => {
+            if (!touchActive) {
+                if (Math.abs(e.touches[0].clientY - touchStartY) > 10) {
+                    clearTimeout(item._touchTimer);
+                }
+                return;
+            }
+            e.preventDefault();
+
+            if (touchClone) {
+                touchClone.style.top = (e.touches[0].clientY - 20) + 'px';
+            }
+
+            container.querySelectorAll(itemSelector).forEach(el => el.classList.remove('drag-over'));
+            const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+            const targetItem = target ? target.closest(itemSelector) : null;
+            if (targetItem && targetItem !== item && container.contains(targetItem)) {
+                targetItem.classList.add('drag-over');
+            }
+        }, { passive: false });
+
+        handle.addEventListener('touchend', (e) => {
+            clearTimeout(item._touchTimer);
+
+            if (!touchActive) {
+                touchFromIndex = null;
+                return;
+            }
+
+            const lastTouch = e.changedTouches[0];
+            container.querySelectorAll(itemSelector).forEach(el => el.classList.remove('drag-over'));
+            item.classList.remove('dragging');
+
+            const target = document.elementFromPoint(lastTouch.clientX, lastTouch.clientY);
+            const targetItem = target ? target.closest(itemSelector) : null;
+
+            if (touchClone && touchClone.parentNode) touchClone.parentNode.removeChild(touchClone);
+            touchClone = null;
+            touchActive = false;
+
+            if (targetItem && container.contains(targetItem) && targetItem !== item) {
+                reorderPanelArray(arrayKey, touchFromIndex, parseInt(targetItem.dataset.index));
+            }
+
+            touchFromIndex = null;
+        });
+    });
+}
+
+// ============================================
 // Project Tasks
 // ============================================
 
@@ -2060,6 +2239,7 @@ function renderProjectTasks() {
 
     projectTaskList.innerHTML = tasks.map((task, index) => `
         <div class="task-item ${task.completed ? 'completed' : ''}" data-index="${index}">
+            <span class="drag-handle" data-index="${index}">&#x2261;</span>
             <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-index="${index}">
             <input type="text" class="task-text" value="${escapeHtml(task.text)}" data-index="${index}">
             <button class="task-delete" data-index="${index}">&times;</button>
@@ -2092,6 +2272,9 @@ function renderProjectTasks() {
             deleteTask(index);
         });
     });
+
+    // Task drag-and-drop
+    setupPanelDragAndDrop(projectTaskList, '.task-item', 'tasks');
 }
 
 // Add new task

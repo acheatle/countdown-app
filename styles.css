@@ -1446,7 +1446,7 @@ body::before {
 
 .panel-link {
     display: grid;
-    grid-template-columns: 1fr 32px;
+    grid-template-columns: auto 1fr 32px;
     align-items: center;
     padding: var(--spacing-xs) 0;
     border-bottom: 1px solid rgba(26, 26, 26, 0.1);
@@ -1655,6 +1655,46 @@ body::before {
 .task-delete:hover {
     opacity: 1 !important;
     color: var(--coral-red);
+}
+
+/* Drag handle for tasks and links */
+.drag-handle {
+    cursor: grab;
+    opacity: 0;
+    color: var(--charcoal);
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 2px;
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity 0.15s;
+    touch-action: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.task-item:hover .drag-handle,
+.panel-link:hover .drag-handle {
+    opacity: 0.3;
+}
+
+.drag-handle:hover {
+    opacity: 0.6 !important;
+}
+
+/* Panel item drag states */
+.task-item.dragging,
+.panel-link.dragging {
+    opacity: 0.3;
+}
+
+.task-item.drag-over,
+.panel-link.drag-over {
+    border-top: 2px solid var(--teal-blue);
+    margin-top: -2px;
 }
 
 .btn-add-task {
