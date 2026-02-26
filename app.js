@@ -247,6 +247,15 @@ projectNavButtons.forEach(btn => {
                 p.classList.add('active');
             }
         });
+
+        // Handle Tasks view
+        const viewSwitcher = document.querySelector('.view-switcher');
+        if (page === 'projects-tasks') {
+            if (viewSwitcher) viewSwitcher.style.visibility = 'hidden';
+            renderAllTasks();
+        } else {
+            if (viewSwitcher) viewSwitcher.style.visibility = '';
+        }
     });
 });
 
@@ -1559,6 +1568,78 @@ function renderProjects() {
     setupProjectInteractions();
 }
 
+// ============================================
+// All Tasks View
+// ============================================
+
+function renderAllTasks() {
+    const allTasksList = document.getElementById('all-tasks-list');
+    const emptyAllTasks = document.getElementById('empty-all-tasks');
+
+    const activeProjects = projects.filter(p => !p.status || p.status === 'active');
+    const sortedActive = sortActiveProjects(activeProjects);
+
+    const projectsWithTasks = sortedActive.filter(p =>
+        p.tasks && p.tasks.some(t => !t.completed && t.text)
+    );
+
+    if (projectsWithTasks.length === 0) {
+        allTasksList.innerHTML = '';
+        emptyAllTasks.classList.remove('hidden');
+        return;
+    }
+
+    emptyAllTasks.classList.add('hidden');
+
+    allTasksList.innerHTML = projectsWithTasks.map(project => {
+        const incompleteTasks = project.tasks
+            .map((task, idx) => ({ ...task, originalIndex: idx }))
+            .filter(t => !t.completed && t.text);
+        const colorClass = getProjectColorClass(project.color || 'teal');
+
+        return `
+            <div class="all-tasks-group">
+                <div class="all-tasks-project-header ${colorClass}">
+                    <button class="all-tasks-project-name" data-project-id="${project.id}">${escapeHtml(project.name)}</button>
+                </div>
+                <div class="all-tasks-items">
+                    ${incompleteTasks.map(task => `
+                        <div class="all-tasks-item">
+                            <input type="checkbox" class="task-checkbox all-task-checkbox" data-project-id="${project.id}" data-task-index="${task.originalIndex}">
+                            <span class="all-tasks-item-text">${escapeHtml(task.text)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    allTasksList.querySelectorAll('.all-task-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const projectId = parseInt(e.target.dataset.projectId);
+            const taskIndex = parseInt(e.target.dataset.taskIndex);
+            toggleTaskFromAllTasksView(projectId, taskIndex);
+        });
+    });
+
+    allTasksList.querySelectorAll('.all-tasks-project-name').forEach(btn => {
+        btn.addEventListener('click', () => {
+            openProjectPanel(parseInt(btn.dataset.projectId));
+        });
+    });
+}
+
+function toggleTaskFromAllTasksView(projectId, taskIndex) {
+    const pIdx = projects.findIndex(p => p.id === projectId);
+    if (pIdx === -1 || !projects[pIdx].tasks) return;
+
+    projects[pIdx].tasks[taskIndex].completed = !projects[pIdx].tasks[taskIndex].completed;
+    projects[pIdx].modifiedAt = new Date().toISOString();
+
+    saveProjects();
+    renderAllTasks();
+}
+
 // Toggle project pin status
 function toggleProjectPin(projectId) {
     const index = projects.findIndex(p => p.id === projectId);
@@ -1772,6 +1853,12 @@ function closeProjectPanel() {
     projectPanelOverlay.classList.remove('active');
     currentPanelProject = null;
     closeProjectEditMode();
+
+    // Keep tasks view in sync if it's active
+    const tasksPage = document.getElementById('page-projects-tasks');
+    if (tasksPage && tasksPage.classList.contains('active')) {
+        renderAllTasks();
+    }
 }
 
 projectPanelClose.addEventListener('click', closeProjectPanel);
