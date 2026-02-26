@@ -2585,7 +2585,7 @@ function generateWeeklyUpdate() {
     });
 
     sortedProjects.forEach(project => {
-        report += `## ${project.name}\n`;
+        report += `${project.name}\n${'─'.repeat(project.name.length)}\n`;
 
         // Status
         if (project.statusText) {
@@ -2597,7 +2597,7 @@ function generateWeeklyUpdate() {
         if (incompleteTasks.length > 0) {
             report += `Tasks:\n`;
             incompleteTasks.forEach(task => {
-                report += `- [ ] ${task.text}\n`;
+                report += `  [ ] ${task.text}\n`;
             });
         }
 
@@ -2623,14 +2623,14 @@ function generateWeeklyUpdate() {
         report += '\n';
     });
 
-    // Download as markdown file
-    const blob = new Blob([report], { type: 'text/markdown' });
+    // Download as plain text file
+    const blob = new Blob([report], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
 
     const fileDate = now.toISOString().split('T')[0];
     const a = document.createElement('a');
     a.href = url;
-    a.download = `weekly-update-${fileDate}.md`;
+    a.download = `weekly-update-${fileDate}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
